@@ -1,0 +1,26 @@
+{
+  "name": "songmap",
+  "version": "1.0.0",
+  "description": "an interactive starmap of songs",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon server/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/maximforever/songmap.git"
+  },
+  "author": "max pekarsky",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/maximforever/songmap/issues"
+  },
+  "homepage": "https://github.com/maximforever/songmap#readme",
+  "dependencies": {
+    "dotenv": "^6.2.0",
+    "ejs": "^2.6.1",
+    "express": "^4.16.4",
+    "nodemon": "^1.18.10"
+  }
+}
