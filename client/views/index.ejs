@@ -11,7 +11,7 @@
         <link href="https://fonts.googleapis.com/css?family=Cutive+Mono" rel="stylesheet">
 
         <!-- Browser icon -->
-        <link rel="icon" href="assets/icon.png" />
+        <link rel="icon" href="./assets/images/icon.png" />
 
         <!-- Font awesome -->
         <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.3.1/css/all.css" integrity="sha384-mzrmE5qonljUremFsqc01SB46JvROS7bZs3IO2EmfFsd15uHvIt+Y8vEf7N7fWAU" crossorigin="anonymous">
@@ -24,10 +24,38 @@
 
 
     <BODY>
-    	<p>sup</p>
+    	<h1>Song Map</h1>
 
-    	<button id="auth">Authorize me!</button>
+        <input id="song" placeholder="some-song"/><button id="search-songs">Search songs</button>
+        <div id = "song-results"></div>
+
+        <div class = "control-panel">
+            <div class="slidecontainer">
+                <p>Energy
+                    <input type="range" min="0" max="1" value="0.5" class="slider" step="0.1" id="energy">
+                </p>
+                <p>Danceability
+                    <input type="range" min="0" max="1" value="0.5" class="slider" step="0.1" id="danceability">
+                </p>
+                <p>Valence (happy/sad)
+                    <input type="range" min="0" max="1" value="0.5" class="slider" step="0.1" id="valence">
+                </p>
+                <p>Tempo
+                    <input type="range" min="60" max="150" value="120" class="slider" step="5" id="tempo">
+                </p>
+            </div>
+        </div>
+
+    	<button id="get-token">Get the token</button>
+    	<button id="get-recs">Get some recommendation</button>
+
+    	
+
+    	<div id="stuff"></div>
+
         <script src="./script.js"></script>
+
+        <pre id = "response"></pre>
 
     </BODY>
 </HTML>
