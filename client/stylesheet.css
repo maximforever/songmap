@@ -29,6 +29,9 @@ a:hover {
     background: #274556;
     max-width: 300px;
     font-size: 0.9rem;
+
+    border-radius: 0.2rem;
+    box-shadow: 0 0 1px 3px rgba(8, 8, 8, 0.22);
 }
 
 .one-track p {
@@ -80,4 +83,11 @@ a:hover {
 
 .no-preview {
 	background: #2d1616;
+}
+
+
+/* Canvas */
+
+#song-map {
+	border: 1px solid #ffffff;
 }

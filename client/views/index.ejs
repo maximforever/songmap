@@ -3,6 +3,7 @@
 <HTML>
     <HEAD> 
         <TITLE>Song Map</TITLE>
+        <meta charset="utf-8">
 
         <!--  Google Fonts -->
 
@@ -49,13 +50,23 @@
     	<button id="get-token">Get the token</button>
     	<button id="get-recs">Get some recommendation</button>
 
+    	<div id = "song-info"></div>
+        <canvas id = "song-map" width="800" height="800"></canvas>
+
     	
+        <div id="current-track"></div>
+        <div id="all-tracks"></div>
+        <div id="recommendations"></div>
 
-    	<div id="stuff"></div>
-
-        <script src="./script.js"></script>
+       
+        
 
         <pre id = "response"></pre>
 
+
+
+
+        <script src="https://d3js.org/d3.v4.min.js"></script>
+        <script src="./script.js"></script>
     </BODY>
 </HTML>
