@@ -31,30 +31,36 @@
         <div id = "song-results"></div>
 
         <div class = "control-panel">
-            <div class="slidecontainer">
-                <p>Energy
+            <div id="slider-wrapper">
+                <div class="one-slider">Energy
                     <input type="range" min="0" max="1" value="0.5" class="slider" step="0.1" id="energy">
-                </p>
-                <p>Danceability
+                </div>
+                <div class="one-slider">Danceability
                     <input type="range" min="0" max="1" value="0.5" class="slider" step="0.1" id="danceability">
-                </p>
-                <p>Valence (happy/sad)
+                </div>
+                <div class="one-slider">Valence (happy/sad)
                     <input type="range" min="0" max="1" value="0.5" class="slider" step="0.1" id="valence">
-                </p>
-                <p>Tempo
+                </div>
+                <div class="one-slider">Tempo
                     <input type="range" min="60" max="150" value="120" class="slider" step="5" id="tempo">
-                </p>
+                </div>
             </div>
+
+            <div id="current-track"></div>
+
         </div>
 
-    	<button id="get-token">Get the token</button>
-    	<button id="get-recs">Get some recommendation</button>
+        <div id ="map-wrapper">
+            <div id ="map-controls">
+    	       <button id="next"><i class="fas fa-play"></i> thank u, next</button>
+               <button id="more-like-this"><i class="fas fa-thumbs-up"></i> i like dis</button>
+    	       <button id="get-recs">Get recommendation</button>
+            </div>
 
-    	<div id = "song-info"></div>
-        <canvas id = "song-map" width="800" height="800"></canvas>
+            <canvas id = "song-map" width="500" height="500"></canvas>
 
-    	
-        <div id="current-track"></div>
+    	</div>
+        
         <div id="all-tracks"></div>
         <div id="recommendations"></div>
 

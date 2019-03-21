@@ -28,7 +28,7 @@ let starterTrack = {
 
 let searchAroundCurrentTrack = true;			// adjust search criteria around this track			
 
-let travelPath = []
+let playedTracks = [];
 
 
 let currentTrack = {							
@@ -152,11 +152,11 @@ let getNewRecommendations = (track) => {
 	console.log(track);
 
 	currentTrack = track;
+	playedTracks.push(track);
+	drawPath();
 	
 
 	let url = "/get-recs"
-
-
 
 	if(searchAroundCurrentTrack && track.analysis){
 		document.getElementById("energy").value = track.analysis.energy; 
@@ -197,8 +197,6 @@ let getNewRecommendations = (track) => {
 	    	// TODO: Write this 
 	    	//updateSearchValues(track);
 
-	    	travelPath.push(track);
-
 
 	    	let recordedIds = allTracks.map((track) => {
 	    		return track.id;
@@ -221,31 +219,6 @@ let getNewRecommendations = (track) => {
 	  });
 }
 
-document.getElementById("get-token").addEventListener("click", () => {
-	console.log("I can't believe you've done this");
-
-
-
-	let url = "/get-token"
-	let myData = JSON.stringify({
-		name: "max"
-	});
-
-
-	fetch(url, {
-		method: "POST",
-		body: myData,
-	})
-	  .then(function(response) {
-	    return response.json();
-	  })
-	  .then(function(myJson) {
-	    	console.log(myJson);
-
-	    	token = myJson.token;
-	    	
-	  });
-})
 
 let searchSongs = (term) => {
 
@@ -273,6 +246,14 @@ let searchSongs = (term) => {
 
 document.getElementById("get-recs").addEventListener("click", function(){
 	getNewRecommendations(starterTrack)
+});
+
+document.getElementById("next").addEventListener("click", function(){
+	getClosestTrack(currentTrack)
+});
+
+document.getElementById("more-like-this").addEventListener("click", function(){
+	getNewRecommendations(currentTrack)
 });
 
 document.getElementById("search-songs").addEventListener("click", function(){
@@ -335,6 +316,16 @@ function checkMouseHover(){
 	if(trackCurrentlyMousedOver != null){
 		highlightTrack(trackCurrentlyMousedOver);
 		document.getElementById("current-track").innerHTML = getTrackCard(trackCurrentlyMousedOver);
+		
+		if(trackCurrentlyMousedOver.preview_url == null){
+			let divs = document.querySelectorAll(".one-track");
+			divs[0].classList += " no-preview";
+		} else {
+			let previewDivs = document.querySelectorAll(".track-preview");
+			previewDivs[0].innerHTML += `<a href = "${trackCurrentlyMousedOver.preview_url}" target="_blank">Preview</a>`;
+
+		}
+
 		document.body.style.cursor = "pointer";
 	} else {
 		document.body.style.cursor = "default";
@@ -382,7 +373,7 @@ function drawMap(){
 
 function drawStar(track){
 
-	let color = (track.id == currentTrack.id) ? "orange" : "blue";
+	let color = (track.id == currentTrack.id) ? "orange" : "#5aaff1";
 
 	let thisXposition = WIDTH * track.analysis.valence;
 	let thisYposition = HEIGHT * track.analysis.energy;
@@ -391,23 +382,23 @@ function drawStar(track){
 }
 
 function drawBackground(){
-	rect(0 ,0, WIDTH, HEIGHT, "black");             // draw background
+	rect(0 ,0, WIDTH, HEIGHT, "#010115");             // draw background
 }
 
 
 function drawPath(){
 
 
-	if(travelPath.length > 1){
+	if(playedTracks.length > 1){
 
 		ctx.beginPath(); 
 		ctx.lineWidth = 1;
 		ctx.strokeStyle = "rgba(155, 155, 155, 0.5)";
 
-		ctx.moveTo(WIDTH * travelPath[0].analysis.valence, HEIGHT * travelPath[0].analysis.energy);
+		ctx.moveTo(WIDTH * playedTracks[0].analysis.valence, HEIGHT * playedTracks[0].analysis.energy);
 		
 
-		travelPath.forEach((track) => {
+		playedTracks.forEach((track) => {
 			ctx.lineTo(WIDTH * track.analysis.valence, HEIGHT * track.analysis.energy);
 		});
 
@@ -416,10 +407,57 @@ function drawPath(){
 
 		ctx.stroke();
 	}
+}
+
+function getClosestTrack(thisTrack){
+
+	var minDistance = Infinity;
+	var closestTrack = null;
+
+	let playedTrackIds = playedTracks.map((track) => {
+		return track.id;
+	});
+
+
+	allTracks.forEach((track) => {
+
+		let trackX = Number(WIDTH * track.analysis.valence);
+		let trackY = Number(HEIGHT * track.analysis.energy);
+
+
+		let currentTrackX = Number(WIDTH * thisTrack.analysis.valence);
+		let currentTrackY = Number(HEIGHT * thisTrack.analysis.energy);
+
+		let distance = getDistance(trackX, trackY, currentTrackX, currentTrackY);
+
+		if(track.id != thisTrack.id && distance < minDistance && !playedTrackIds.includes(track.id)){
+			minDistance = distance;
+			closestTrack = track; 
+		}
+
+	})
+
 	
+	if(closestTrack != null){
+		console.log("found", closestTrack);
+
+		playedTracks.push(closestTrack);			// add to played tracks
+		currentTrack = closestTrack;				// play track
+		
+	} else {
+		console.log("couldn't find a close track!");
+		getNewRecommendations(currentTrack);
+
+		setTimeout(function(){
+			getClosestTrack(currentTrack);
+		}, 1000)
+	}
+
+
 
 	
 
+	//TODO: actually play the frakkin' track
 
 }
 
