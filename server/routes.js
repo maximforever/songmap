@@ -96,6 +96,7 @@ router.post("/get-recs", (req, res) => {
             let token = body.access_token;
             console.log("GOT A TOKEN!", token);
 
+        /* --------------------   GET RECOMMENDATIONS  --------------------*/
         /* -------------------- move into own function --------------------*/
 
             let baseUrl = "https://api.spotify.com/v1/recommendations";
@@ -130,25 +131,36 @@ router.post("/get-recs", (req, res) => {
                     console.log(err);
                 } else {
 
-                    let ids = trackBody.tracks.map((song) => {
+                    /* --------------------   GET TRACK ANALYSIS  --------------------*/
+
+                    let songIds = [];
+                    let artistIds = [];
+
+                    /*let ids = trackBody.tracks.map((song) => {
                         return song.id;
+                    });*/
+
+                    trackBody.tracks.forEach((song) => {
+                        songIds.push(song.id);
+
+                        if(!artistIds.includes(song.artists[0].id)){
+                            artistIds.push(song.artists[0].id);
+                        }
                     });
 
                     console.log("got the ids!");
-                    console.log(ids);
+                    console.log(songIds);
                     
                     /* move into own function */
 
                     let analysisUrl = "https://api.spotify.com/v1/audio-features/?ids=";
 
-                    for(let i = 0; i < ids.length; i++){
-                        analysisUrl += (ids[i] + ",")
+                    for(let i = 0; i < songIds.length; i++){
+                        analysisUrl += (songIds[i] + ",")
                     }
 
-                    console.log(analysisUrl);
-                    console.log(authWithToken);
+                    //console.log(analysisUrl);
 
-                    
                     request.get({
                         url: analysisUrl,
                         headers: {
@@ -162,25 +174,60 @@ router.post("/get-recs", (req, res) => {
                             console.log(err);
                         } else {
 
+                            //console.log(analysisBody);
 
-                            // TODO: fix
-                            // terrible O (N^2) operation
+                            let genreUrl = "https://api.spotify.com/v1/artists?ids=";
 
+                            for(let i = 0; i < artistIds.length; i++){
+                                genreUrl += (artistIds[i])
 
-                            for(let i = 0; i < trackBody.tracks.length; i++){
-                                let thisTrack = trackBody.tracks[i];
-                                thisTrack.analysis = analysisBody.audio_features.find((analysis) => {
-                                    return analysis.id == thisTrack.id;
-                                }) 
-
+                                if (i < artistIds.length - 1){
+                                    genreUrl += ","
+                                }
                             }
 
-                            res.send({
-                                token: token,
-                                message: "Got the stuff!",
-                                data: JSON.stringify(trackBody)
-                            })
+                            console.log(genreUrl);
 
+                            request.get({
+                                url: genreUrl,
+                                headers: {
+                                    'Authorization': authWithToken
+                                },
+                                json: true
+                            },
+                            function(err, analysisResponse, artistInfoBody){
+                                if(err || spotifyResponse.statusCode != 200){
+                                    console.log("ERROR!");
+                                    console.log(err);
+                                } else {
+                                    
+                                    // match songs to their analyses and genres
+                                    
+
+                                    //console.log(artistInfoBody);
+
+                                    for(let i = 0; i < trackBody.tracks.length; i++){
+
+                                        let thisTrack = trackBody.tracks[i];
+
+                                        thisTrack.analysis = analysisBody.audio_features.find((analysis) => {
+                                            return analysis.id == thisTrack.id;
+                                        }) 
+
+                                        thisTrack.genres = artistInfoBody.artists.find((artist) => {
+                                            return artist.id == thisTrack.artists[0].id
+                                        }).genres;          // this is hacky, but find returns the whole element - can't just return artist.genres
+
+                                    }
+
+
+                                    res.send({
+                                        token: token,
+                                        message: "Got the stuff!",
+                                        data: JSON.stringify(trackBody)
+                                    })
+                                }
+                            })
                         }
                     })
 

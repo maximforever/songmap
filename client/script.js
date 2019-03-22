@@ -117,6 +117,9 @@ let displayRecommendations = () => {
 		}
 	})
 
+
+	calculateGenres();
+
 	attachClickListeners();
 }
 
@@ -132,6 +135,7 @@ function getTrackCard(track){
 				<div class = "track-preview">
 					<a href = "${track.external_urls.spotify}" target="_blank">Open in Spotify</a>
 				</div>
+				<div class = "genres">${track.genres}</div>
 				<div class = "track-stats">
 					<p>SPCH ${track.analysis.speechiness}</p>
 					<p>ACOUST ${track.analysis.acousticness}</p>
@@ -458,6 +462,31 @@ function getClosestTrack(thisTrack){
 	
 
 	//TODO: actually play the frakkin' track
+
+}
+
+
+function calculateGenres(){
+
+
+	let genreMap = {};
+
+
+	allTracks.forEach((track) => {
+
+		track.genres.forEach((genre) => {
+
+			if(typeof(genreMap[genre]) == "undefined"){
+				genreMap[genre] = 0;
+			}
+
+			genreMap[genre] = genreMap[genre] + 1;
+		})
+
+	})
+
+
+	console.log(genreMap);
 
 }
 
