@@ -27,6 +27,8 @@
     <BODY>
     	<h1>Song Map</h1>
 
+        <a href="/login"><button>FANCY LOGIN</button></a>
+
         <input id="song" placeholder="some-song"/><button id="search-songs">Search songs</button>
         <div id = "song-results"></div>
 
@@ -51,13 +53,28 @@
         </div>
 
         <div id ="map-wrapper">
+            <div id = "camera-position">
+                {
+                <span id="camera-x">-</span>, 
+                <span id="camera-y">-</span>, 
+                <span id="camera-z">-</span>
+                }
+            </div>
+
+            <div id = "mouse-position">
+                {
+                <span id="mouse-x">-</span>, 
+                <span id="mouse-y">-</span>, 
+                }
+            </div>
+
             <div id ="map-controls">
     	       <button id="next"><i class="fas fa-play"></i> thank u, next</button>
                <button id="more-like-this"><i class="fas fa-thumbs-up"></i> i like dis</button>
     	       <button id="get-recs">Get recommendation</button>
             </div>
 
-            <canvas id = "song-map" width="800" height="800"></canvas>
+            <!-- <canvas id = "song-map" width="400" height="400"></canvas> -->
 
     	</div>
         
@@ -71,7 +88,7 @@
 
 
 
-
+        <script src="./assets/three.js"></script>
         <script src="https://d3js.org/d3.v4.min.js"></script>
         <script src="./script.js"></script>
     </BODY>

@@ -2,10 +2,17 @@ let express = require('express');
 let request = require('request');
 let router = express.Router();
 const bodyParser = require('body-parser');                          // parse request body
+const querystring = require('querystring');
+
+
 
 require('dotenv').config()                                          // access .env file
 router.use(bodyParser.json());                                     // display body as JSON
 
+
+
+// TODO: REMOVE THIS!!! STORE THIS DATA IN A COOKIE
+let ACCESS_TOKEN = null;
 
 
 /* MIDDLEWARE */
@@ -59,6 +66,8 @@ router.post("/test", (req, res) => {
         }
     })
 })
+
+/* Client Credentials Flow */
 
 
 router.post("/get-recs", (req, res) => {
@@ -169,7 +178,7 @@ router.post("/get-recs", (req, res) => {
                         json: true
                     },
                     function(err, analysisResponse, analysisBody){
-                        if(err || spotifyResponse.statusCode != 200){
+                        if(err || analysisResponse.statusCode != 200){
                             console.log("ERROR!");
                             console.log(err);
                         } else {
@@ -252,6 +261,154 @@ router.post("/get-recs", (req, res) => {
 
 
 })
+
+
+router.get('/login', function(req, res) {
+
+  let state = randomString(16);
+  let scope = 'user-modify-playback-state playlist-read-private user-read-private';
+
+  // your application requests authorization
+  // var scope = 'user-read-private user-read-email';
+  res.redirect('https://accounts.spotify.com/authorize?' +
+    querystring.stringify({
+      response_type: 'code',
+      client_id: process.env.CLIENT_ID,
+      scope: scope,
+      redirect_uri: process.env.REDIRECT_URI,
+      state: state
+    }));
+});
+
+
+router.post("/play-in-app", function(req, res){
+
+    console.log(req.body);
+
+    //res.send({status: "success!"});
+
+
+    if(ACCESS_TOKEN != null){
+
+        let playUrl = 'https://api.spotify.com/v1/me/player/play'
+
+        let data = {
+            uris: [req.body.uri.toString()]
+        }
+
+        console.log(data);
+
+        request.put({
+            url: playUrl,
+            headers: {
+                'Authorization': "Bearer " + ACCESS_TOKEN
+            },
+            body: data,
+            json: true
+        },
+
+        function(err, playResponse, playBody){
+
+            //console.log(playResponse);
+
+            console.log(playResponse.statusCode);
+
+            // sends a 204 if OK - no content; nothing for the client to do
+            if(err || playResponse.statusCode != 204){
+                console.log("ERROR!");
+                console.log(playResponse.body.error);
+            } else {
+
+                console.log("IT WORKED!");
+                res.send({status: "oh wow it worked"})
+            }
+        });
+    } else {
+        res.send({status: "access token issue"})
+    }
+
+});
+
+
+/* Authorization Code Flow */
+
+router.get('/spotify-login-redirect', function(req, res){
+
+    let code = req.query.code || null;
+    let state = req.query.state || null;
+
+
+    let authOptions = {
+        url: 'https://accounts.spotify.com/api/token',
+        form: {
+            code: code,
+            redirect_uri: process.env.REDIRECT_URI,
+            grant_type: 'authorization_code'
+        },
+        headers: {
+            'Authorization': 'Basic ' + new Buffer.from(process.env.CLIENT_ID + ":" + process.env.CLIENT_SECRET).toString('base64')
+        },
+        json: true
+    };
+
+
+    request.post(authOptions, function(error, response, body) {
+      if (!error && response.statusCode === 200) {
+
+        let access_token = body.access_token;
+        let refresh_token = body.refresh_token;
+
+        let options = {
+          url: 'https://api.spotify.com/v1/me',
+          headers: { 'Authorization': 'Bearer ' + access_token },
+          json: true
+        };
+
+        // use the access token to access the Spotify Web API
+        request.get(options, function(error, response, body) {
+          console.log(body);
+        });
+
+        ACCESS_TOKEN = access_token;
+
+        res.redirect("/#authorized");
+/*
+        // we can also pass the token to the browser to make requests from there
+        res.redirect('/#' +
+          querystring.stringify({
+            access_token: access_token,
+            refresh_token: refresh_token
+          }));
+
+        */
+      } else {
+        res.redirect('/#' +
+          querystring.stringify({
+            error: 'invalid_token'
+          }));
+      }
+    });
+
+
+    //console.log("got a ping to redirect uri");
+    //res.redirect("/")
+});
+
+
+
+// OTHER
+
+function randomString(length) {
+  let text = '';
+  let chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+
+  for (let i = 0; i < length; i++) {
+    text += chars[Math.floor(Math.random() * chars.length)];
+  }
+
+  return text;
+};
+
 
 
 

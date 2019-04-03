@@ -18,10 +18,12 @@
   },
   "homepage": "https://github.com/maximforever/songmap#readme",
   "dependencies": {
+    "cors": "^2.8.5",
     "dotenv": "^6.2.0",
     "ejs": "^2.6.1",
     "express": "^4.16.4",
     "nodemon": "^1.18.10",
+    "querystring": "^0.2.0",
     "request": "^2.88.0"
   }
 }

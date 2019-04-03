@@ -48,19 +48,35 @@ let lastMouseY = 0;
 let attachClickListeners = () => {
 
 	document.querySelectorAll(".get-more").forEach(function(el){
-		el.addEventListener("click", (e) => {
+		el.addEventListener("click", (el) => {
 
 			//e.stopPropagation() ??
 			
 
 			let currentTrack = {
-				id: e.target.id,
-				name: e.target.dataset.name
+				id: el.target.id,
+				name: el.target.dataset.name
 			}
 
 			getNewRecommendations(currentTrack);
 		});
 	})
+
+
+
+
+	document.querySelectorAll(".play-in-app").forEach(function(button){
+		button.addEventListener("click", (el) => {
+			let uri = el.target.dataset.uri;
+
+			playInApp(uri);
+
+
+		});
+	});
+
+
+
 
 	console.log("done!");
 
@@ -134,6 +150,7 @@ function getTrackCard(track){
 				</div>
 				<div class = "track-preview">
 					<a href = "${track.external_urls.spotify}" target="_blank">Open in Spotify</a>
+					<button class="play-in-app" data-uri="${track.uri}">Play in Spotify</button>
 				</div>
 				<div class = "genres">${track.genres}</div>
 				<div class = "track-stats">
@@ -157,7 +174,7 @@ let getNewRecommendations = (track) => {
 
 	currentTrack = track;
 	playedTracks.push(track);
-	drawPath();
+	//drawPath();
 	
 
 	let url = "/get-recs"
@@ -210,6 +227,7 @@ let getNewRecommendations = (track) => {
 	    	data.tracks.forEach((track) => {
 	    		if(!recordedIds.includes(track.id)){
 	    			allTracks.push(track);
+	    			add3dStar(track);
 	    		} else {
 	    			console.log(`Looks like ${track.name} is already in the system`);
 	    		}
@@ -219,7 +237,7 @@ let getNewRecommendations = (track) => {
 	    	document.getElementById("response").innerText = JSON.stringify(JSON.parse(res.data), false, 2);
 	    	
 	    	displayRecommendations();
-	    	loop();
+	    	//loop();					// this is the bit that draws things!
 	  });
 }
 
@@ -248,6 +266,32 @@ let searchSongs = (term) => {
 	  });
 } 
 
+
+
+function calculateGenres(){
+
+
+	let genreMap = {};
+
+
+	allTracks.forEach((track) => {
+
+		track.genres.forEach((genre) => {
+
+			if(typeof(genreMap[genre]) == "undefined"){
+				genreMap[genre] = 0;
+			}
+
+			genreMap[genre] = genreMap[genre] + 1;
+		})
+
+	})
+
+
+	console.log(genreMap);
+
+}
+
 document.getElementById("get-recs").addEventListener("click", function(){
 	getNewRecommendations(starterTrack)
 });
@@ -264,10 +308,278 @@ document.getElementById("search-songs").addEventListener("click", function(){
 	searchSongs(document.getElementById("song").value)
 });
 
+
+
+/* ======================================================== */
+
+/* three.js stuff */
+
+
+let camera;
+let cmdButtonDown = false;
+
+let raycaster = new THREE.Raycaster();				// thing that lets us select stuff in 3d space
+
+var mouse = new THREE.Vector2(), INTERSECTED;
+
+
+const WIDTH = 600;
+const HEIGHT = 600;
+
+let renderer = new THREE.WebGLRenderer({
+	//alpha: true, // remove canvas' bg color
+	antialias: true
+});
+
+renderer.setSize(WIDTH, HEIGHT);
+
+document.getElementById("map-wrapper").appendChild(renderer.domElement);
+
+let scene = new THREE.Scene;
+
+
+// field-of-view (how much we can see around), aspect (screen ratio), near, and far -
+// the closest & furthest things the camera can see 
+camera = new THREE.PerspectiveCamera( 45, WIDTH / HEIGHT, 0.1, 5000);
+
+//camera.position.set(430, 1020, 800);
+camera.position.set(200, 500, 250);
+
+
+//skybox 
+
+let skyboxGeometry = new THREE.CubeGeometry(10000, 10000, 10000);
+let skyboxMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.FrontSide });
+let skybox = new THREE.Mesh(skyboxGeometry, skyboxMaterial);
+ 
+scene.add(skybox);
+
+let pointLight = new THREE.PointLight(0xffffff);
+pointLight.position.set(0, 0, 1000);
+ 
+scene.add(pointLight);
+
+let starGeometry = new THREE.SphereGeometry(1, 32, 32 );
+//let starMaterial = new THREE.MeshLambertMaterial({ color: 0x5aaff1 });
+
+function render() {
+
+
+	// update the picking ray with the camera and mouse position
+	raycaster.setFromCamera( mouse, camera );
+
+	// calculate objects intersecting the picking ray
+	var intersects = raycaster.intersectObjects( scene.children );
+
+	//console.log(intersects.length)
+
+
+	intersects.forEach((intersect) => {
+		intersect.object.material.color.set(0xff0000);
+	});
+
+/*	scene.children.forEach((star) => {
+
+		if(typeof(star.material) != "undefined"){
+			star.material.color.set(0xffffff);
+		}
+		
+	});
+*/
+
+	// render scene
+
+    renderer.render(scene, camera);
+    requestAnimationFrame(render);
+}
+ 
+
+
+render();
+addCameraControls();
+
+
+function add3dStar(track){
+
+	let thisXposition = WIDTH * track.analysis.valence; //*4;
+	let thisYposition = HEIGHT * track.analysis.energy; //*4;
+
+	let starMaterial = new THREE.MeshLambertMaterial({ color: 0x5aaff1 });
+
+	let star = new THREE.Mesh(starGeometry, starMaterial);
+	star.position.set(thisXposition, thisYposition, 0);
+
+	//console.log(`placing at {${star.position.x}, ${star.position.y}, ${star.position.z}}`);
+
+	scene.add(star);
+	//camera.lookAt(star.position);
+}
+
+function displayCameraPosition(){
+	document.getElementById("camera-x").innerText = camera.position.x;
+	document.getElementById("camera-y").innerText = camera.position.y;
+	document.getElementById("camera-z").innerText = camera.position.z;
+
+}
+
+function displayMousePosition(x, y){
+	document.getElementById("mouse-x").innerText = x;
+	document.getElementById("mouse-y").innerText = y;
+}
+
+
+function onMouseMove( event ) {
+
+	// calculate mouse position in normalized device coordinates
+	// (-1 to +1) for both components
+
+	let canvas = document.querySelector("canvas");
+
+	mouse.x = ( event.offsetX / WIDTH ) * 2 - 1;
+	mouse.y = - ( event.offsetY / HEIGHT ) * 2 + 1;
+
+	displayMousePosition(mouse.x, mouse.y)
+
+}
+
+
+document.querySelector("canvas").addEventListener( 'mousemove', onMouseMove, false );
+
+
+
+
+
+function addCameraControls(){
+	document.addEventListener("keydown",(e) => {
+
+
+		if(e.which == 65){
+			camera.position.x -= 10;
+			displayCameraPosition();
+		}
+
+		if(e.which == 87){
+			camera.position.y += 10;
+			displayCameraPosition();
+		}
+
+
+		if(e.which == 68){
+			camera.position.x += 10;
+			displayCameraPosition();
+		}
+
+		if(e.which == 83){
+			camera.position.y -= 10;
+			displayCameraPosition();
+		}
+
+		if(e.which == 91){
+			cmdButtonDown = true;
+		}
+
+
+
+		if(e.which == 38){
+			e.preventDefault();
+			camera.position.z -= 10;
+			displayCameraPosition();
+		}
+
+
+		if(e.which == 40){
+			e.preventDefault();
+			camera.position.z += 10;
+			displayCameraPosition();
+		}
+
+
+		// rotate  
+
+
+
+		if(e.which == 76){
+			camera.rotation.z -= (5 * Math.PI / 180);
+			displayCameraPosition();
+		}
+
+
+		if(e.which == 74){
+			camera.rotation.z += (5 * Math.PI / 180);
+			displayCameraPosition();
+		}
+
+
+		if(e.which == 73){
+			camera.rotation.y -= (5 * Math.PI / 180);
+			displayCameraPosition();
+		}
+
+
+		if(e.which == 75){
+			camera.rotation.y += (5 * Math.PI / 180);
+			displayCameraPosition();
+		}
+
+
+
+
+	});
+
+
+	document.addEventListener("keyup",(e) => {
+
+		if(e.which == 91){
+			cmdButtonDown = false;
+		}
+	});
+
+
+	window.addEventListener("wheel",(e) => {
+		// e.deltaX, e.deltaY is the horizontal/verical change in scrolling hmmm
+
+		if(cmdButtonDown){
+			camera.position.y += 2 * e.deltaY;
+			camera.position.x += 2 * e.deltaX;
+		}
+	});
+}
+
+
+function playInApp(uri){
+
+	let data = {
+		uri: uri
+	};
+
+	let url = `/play-in-app`;
+
+	console.log(url);
+
+	fetch(url, {
+        json: true,
+		method: "POST",
+		body: JSON.stringify(data),
+		headers:{
+		    'Content-Type': 'application/json'			// this is important! express won't read our data as json without it
+		}
+	})
+	  .then(function(response) {
+	    return response.json();
+	  })
+	  .then(function(myJson) {
+	    	console.log(myJson);
+	    	
+	  });
+
+}
+
+
+
 /* ======================================================== */
 
 /* canvas stuff */
-
+/*
 var canvas = document.getElementById("song-map");
 var ctx = canvas.getContext('2d');
 
@@ -466,33 +778,10 @@ function getClosestTrack(thisTrack){
 }
 
 
-function calculateGenres(){
-
-
-	let genreMap = {};
-
-
-	allTracks.forEach((track) => {
-
-		track.genres.forEach((genre) => {
-
-			if(typeof(genreMap[genre]) == "undefined"){
-				genreMap[genre] = 0;
-			}
-
-			genreMap[genre] = genreMap[genre] + 1;
-		})
-
-	})
-
-
-	console.log(genreMap);
-
-}
 
 
 
-
+*/
 
 
 
