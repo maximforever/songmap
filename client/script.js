@@ -30,7 +30,6 @@ let searchAroundCurrentTrack = true;			// adjust search criteria around this tra
 
 let playedTracks = [];
 
-
 let currentTrack = {							
 	id: null, 
 	name: null
@@ -75,10 +74,6 @@ let attachClickListeners = () => {
 		});
 	});
 
-
-
-
-	console.log("done!");
 
 }
 
@@ -166,16 +161,13 @@ function getTrackCard(track){
     		</div>`
 }
 
-let getNewRecommendations = (track) => {
+function getNewRecommendations(track){
 
 	let start = Date.now();
 
 	console.log(track);
 
 	currentTrack = track;
-	playedTracks.push(track);
-	//drawPath();
-	
 
 	let url = "/get-recs"
 
@@ -227,7 +219,7 @@ let getNewRecommendations = (track) => {
 	    	data.tracks.forEach((track) => {
 	    		if(!recordedIds.includes(track.id)){
 	    			allTracks.push(track);
-	    			add3dStar(track);
+	    			addStar(track);
 	    		} else {
 	    			console.log(`Looks like ${track.name} is already in the system`);
 	    		}
@@ -292,12 +284,111 @@ function calculateGenres(){
 
 }
 
+function drawPlayedTrackPath(){
+
+	if(playedTracks.length > 1){
+
+		removePastPlayedTrackPath();
+
+		
+
+		//let material = new THREE.LineBasicMaterial( { color: 0x404c5e } );
+
+		let lineMaterial = new THREE.LineDashedMaterial( {
+			color: 0x404c5e,
+			linewidth: 5,
+			scale: 1,
+			dashSize: 0.1,
+			gapSize: 0.1,
+		} );
+
+
+
+		let pathGeometry = new THREE.Geometry();
+		let playedPathLine = new THREE.Line(pathGeometry, lineMaterial );
+
+		console.log(playedTracks);
+
+		playedTracks.forEach((track) => {
+			pathGeometry.vertices.push(new THREE.Vector3( track.position.x, track.position.y, track.position.z) );
+		});
+
+		scene.add(playedPathLine);
+	}
+
+}
+
+function removePastPlayedTrackPath(){
+	let previousLine = scene.children.forEach((child) => {
+		if(child.type == "Line"){
+			scene.remove(child);
+		}
+	});
+}
+
+
+function playClosestTrack(thisTrack){
+
+	let currentMinDistance = Infinity;
+	let closestTrack = null;
+
+	let playedTrackIds = playedTracks.map((track) => {	
+		return track.data.id;
+	});
+
+	console.log(playedTrackIds);
+
+	console.log(thisTrack);
+
+	// cycle through the children, but only the stars
+	scene.children.forEach((object) => {
+
+		if(object.type == "Mesh" && object.geometry.type == "SphereGeometry"){
+
+			let distance = getDistanceIn3d(object.position.x, object.position.y, object.position.z,  thisTrack.position.x, thisTrack.position.y, thisTrack.position.z);
+			console.log(distance, object.data.name);
+
+			if(object.data.id != thisTrack.data.id && distance < currentMinDistance && !playedTrackIds.includes(object.data.id)){
+				currentMinDistance = distance;
+				closestTrack = object; 
+			}
+		}
+
+	})
+
+	
+	if(closestTrack != null){
+		console.log("found closest track: ", closestTrack.data.name);
+
+		playedTracks.push(closestTrack);			// add to played tracks
+
+		currentTrack = closestTrack;
+		playedTracks.push(closestTrack);
+
+		playInApp(closestTrack.data.uri);
+		drawPlayedTrackPath();
+		
+	} else {
+		console.log("couldn't find a close track!");
+		getNewRecommendations(thisTrack.data);
+
+		setTimeout(function(){
+			playClosestTrack(thisTrack);
+		}, 2000)
+	}
+
+}
+
+
+
+
 document.getElementById("get-recs").addEventListener("click", function(){
 	getNewRecommendations(starterTrack)
 });
 
-document.getElementById("next").addEventListener("click", function(){
-	getClosestTrack(currentTrack)
+document.getElementById("play-next-track").addEventListener("click", function(){
+	playClosestTrack(currentTrack);
+
 });
 
 document.getElementById("more-like-this").addEventListener("click", function(){
@@ -309,6 +400,15 @@ document.getElementById("search-songs").addEventListener("click", function(){
 });
 
 
+function getDistanceIn2d(x1, y1, x2, y2){
+	return Math.sqrt(Math.pow((x2 - x1), 2) + Math.pow((y2 - y1), 2))
+}
+
+function getDistanceIn3d(x1, y1, z1, x2, y2, z2){
+	return Math.sqrt(Math.pow((x2 - x1), 2) + Math.pow((y2 - y1), 2) + Math.pow((z2 - z1), 2));
+
+}
+
 
 /* ======================================================== */
 
@@ -316,7 +416,7 @@ document.getElementById("search-songs").addEventListener("click", function(){
 
 
 let camera;
-let cmdButtonDown = false;
+
 
 let raycaster = new THREE.Raycaster();				// thing that lets us select stuff in 3d space
 
@@ -360,7 +460,6 @@ pointLight.position.set(0, 0, 1000);
 scene.add(pointLight);
 
 let starGeometry = new THREE.SphereGeometry(1, 32, 32 );
-//let starMaterial = new THREE.MeshLambertMaterial({ color: 0x5aaff1 });
 
 function render() {
 
@@ -371,21 +470,53 @@ function render() {
 	// calculate objects intersecting the picking ray
 	var intersects = raycaster.intersectObjects( scene.children );
 
-	//console.log(intersects.length)
+
+	if(intersects.length == 1){
+
+		console.log(intersects[0].object);
 
 
-	intersects.forEach((intersect) => {
-		intersect.object.material.color.set(0xff0000);
-	});
-
-/*	scene.children.forEach((star) => {
-
-		if(typeof(star.material) != "undefined"){
-			star.material.color.set(0xffffff);
+		if(intersects[0].object.geometry && intersects[0].object.geometry.type == "SphereGeometry"){
+			let thisStar = intersects[0].object;
+			thisStar.material.color.set(0xff0000);
+			document.body.style.cursor = "pointer";
+			document.getElementById("hover-track-name").innerHTML = thisStar.data.name;
 		}
-		
-	});
-*/
+
+
+		// this is a veeeery ugly way of checking if we're already displaying this card
+		if(trackCurrentlyMousedOver !== null){
+			document.getElementById("current-track").innerHTML = getTrackCard(trackCurrentlyMousedOver);
+			
+			if(trackCurrentlyMousedOver.preview_url == null){
+				let divs = document.querySelectorAll(".one-track");
+				divs[0].classList += " no-preview";
+			} else {
+				let previewDivs = document.querySelectorAll(".track-preview");
+				previewDivs[0].innerHTML += `<a href = "${trackCurrentlyMousedOver.preview_url}" target="_blank">Preview</a>`;
+
+			}
+
+			
+		}
+
+	} else {
+		trackCurrentlyMousedOver = null
+		document.body.style.cursor = "default";
+		document.getElementById("hover-track-name").innerHTML = "-";
+		// unselect all
+		scene.children.forEach((object) => {
+			if(typeof(object.geometry) != "undefined" && object.geometry.type == "SphereGeometry"){
+				object.material.color.set(0x5aaff1);
+			}
+		})
+
+	}
+
+
+
+	
+
 
 	// render scene
 
@@ -399,7 +530,7 @@ render();
 addCameraControls();
 
 
-function add3dStar(track){
+function addStar(track){
 
 	let thisXposition = WIDTH * track.analysis.valence; //*4;
 	let thisYposition = HEIGHT * track.analysis.energy; //*4;
@@ -409,7 +540,7 @@ function add3dStar(track){
 	let star = new THREE.Mesh(starGeometry, starMaterial);
 	star.position.set(thisXposition, thisYposition, 0);
 
-	//console.log(`placing at {${star.position.x}, ${star.position.y}, ${star.position.z}}`);
+	star.data = track;			// storing track data in the star 
 
 	scene.add(star);
 	//camera.lookAt(star.position);
@@ -442,8 +573,44 @@ function onMouseMove( event ) {
 
 }
 
+function onClick( event ){
+
+	// update the picking ray with the camera and mouse position
+	raycaster.setFromCamera( mouse, camera );
+
+	// calculate objects intersecting the picking ray
+	var intersects = raycaster.intersectObjects( scene.children );
+
+
+	if(intersects.length == 1){
+
+		if(typeof(intersects[0].object.geometry) != "undefined" && intersects[0].object.geometry.type == "SphereGeometry"){
+			let thisStar = intersects[0].object.data;
+
+			//getNewRecommendations(thisStar);
+
+			playedTracks.push(intersects[0].object);
+
+			drawPlayedTrackPath();
+
+			currentTrack = intersects[0].object;
+
+			console.log("the new currentTrack is");
+			console.log(currentTrack);
+
+			//console.log(thisStar);
+			playInApp(thisStar.uri);
+			console.log(`${thisStar.name} - ${thisStar.artists[0].name}`);
+		}
+
+	
+	}
+
+}
+
 
 document.querySelector("canvas").addEventListener( 'mousemove', onMouseMove, false );
+document.querySelector("canvas").addEventListener( 'click', onClick, false );
 
 
 
@@ -472,10 +639,6 @@ function addCameraControls(){
 		if(e.which == 83){
 			camera.position.y -= 10;
 			displayCameraPosition();
-		}
-
-		if(e.which == 91){
-			cmdButtonDown = true;
 		}
 
 
@@ -527,22 +690,6 @@ function addCameraControls(){
 	});
 
 
-	document.addEventListener("keyup",(e) => {
-
-		if(e.which == 91){
-			cmdButtonDown = false;
-		}
-	});
-
-
-	window.addEventListener("wheel",(e) => {
-		// e.deltaX, e.deltaY is the horizontal/verical change in scrolling hmmm
-
-		if(cmdButtonDown){
-			camera.position.y += 2 * e.deltaY;
-			camera.position.x += 2 * e.deltaX;
-		}
-	});
 }
 
 
@@ -553,8 +700,6 @@ function playInApp(uri){
 	};
 
 	let url = `/play-in-app`;
-
-	console.log(url);
 
 	fetch(url, {
         json: true,
@@ -568,389 +713,13 @@ function playInApp(uri){
 	    return response.json();
 	  })
 	  .then(function(myJson) {
-	    	console.log(myJson);
-	    	
+	    
+	    	if(myJson.error){
+	    		console.log("ERROR");
+	    		console.log(myJson.error.message);
+	    	} else {
+	    		console.log(myJson);
+	    	}	
 	  });
 
 }
-
-
-
-/* ======================================================== */
-
-/* canvas stuff */
-/*
-var canvas = document.getElementById("song-map");
-var ctx = canvas.getContext('2d');
-
-var WIDTH = canvas.width;
-var HEIGHT = canvas.height;
-
-canvas.addEventListener("mousemove", function(e){
-	onMouseMove(e.offsetX, e.offsetY);
-});
-
-canvas.addEventListener("click", function(e){
-	if(trackCurrentlyMousedOver != null){
-		getNewRecommendations(trackCurrentlyMousedOver);
-	}
-});
-
-
-function onMouseMove(x,y){
-	lastMouseX = x;
-	lastMouseY = y;
-}
-
-
-function checkMouseHover(){
-
-
-	trackCurrentlyMousedOver = null;
-	let x = lastMouseX;
-	let y = lastMouseY;
-
-	if(!allTracks.length){
-		return;
-	}
-
-	allTracks.forEach((track) => {
-
-		let trackX = Number(WIDTH * track.analysis.valence);
-		let trackY = Number(HEIGHT * track.analysis.energy);
-
-		let distance = getDistance(trackX, trackY, x, y);
-
-
-		if(distance < 10){
-			trackCurrentlyMousedOver = track; 
-		}
-
-	})
-
-	// this is a veeeery ugly way of checking if we're already displaying this card
-	if(trackCurrentlyMousedOver != null){
-		highlightTrack(trackCurrentlyMousedOver);
-		document.getElementById("current-track").innerHTML = getTrackCard(trackCurrentlyMousedOver);
-		
-		if(trackCurrentlyMousedOver.preview_url == null){
-			let divs = document.querySelectorAll(".one-track");
-			divs[0].classList += " no-preview";
-		} else {
-			let previewDivs = document.querySelectorAll(".track-preview");
-			previewDivs[0].innerHTML += `<a href = "${trackCurrentlyMousedOver.preview_url}" target="_blank">Preview</a>`;
-
-		}
-
-		document.body.style.cursor = "pointer";
-	} else {
-		document.body.style.cursor = "default";
-	}
-}
-
-
-function highlightTrack(track){
-
-	let trackX = Number(WIDTH * track.analysis.valence);
-	let trackY = Number(HEIGHT * track.analysis.energy);
-
-	ctx.strokeStyle = "white";
-	ctx.lineWidth = 2;
-
-	ctx.beginPath();
-	ctx.arc(trackX, trackY, 5, 0, 2 * Math.PI);
-	ctx.stroke();
-
-}
-
-function loop(){
-
-	clearInterval(mapLoop);
-
-	mapLoop = setInterval(drawMap, 50);
-
-}
-
-
-
-function drawMap(){
-
-	clear();
-	drawBackground();
-	drawPath();
-
-	allTracks.forEach((track) => {
-		drawStar(track);
-	});
-
-	checkMouseHover();
-
-}
-
-function drawStar(track){
-
-	let color = (track.id == currentTrack.id) ? "orange" : "#5aaff1";
-
-	let thisXposition = WIDTH * track.analysis.valence;
-	let thisYposition = HEIGHT * track.analysis.energy;
-
-	circle(thisXposition, thisYposition, 2, color, false)
-}
-
-function drawBackground(){
-	rect(0 ,0, WIDTH, HEIGHT, "#010115");             // draw background
-}
-
-
-function drawPath(){
-
-
-	if(playedTracks.length > 1){
-
-		ctx.beginPath(); 
-		ctx.lineWidth = 1;
-		ctx.strokeStyle = "rgba(155, 155, 155, 0.5)";
-
-		ctx.moveTo(WIDTH * playedTracks[0].analysis.valence, HEIGHT * playedTracks[0].analysis.energy);
-		
-
-		playedTracks.forEach((track) => {
-			ctx.lineTo(WIDTH * track.analysis.valence, HEIGHT * track.analysis.energy);
-		});
-
-
-		
-
-		ctx.stroke();
-	}
-}
-
-function getClosestTrack(thisTrack){
-
-	var minDistance = Infinity;
-	var closestTrack = null;
-
-	let playedTrackIds = playedTracks.map((track) => {
-		return track.id;
-	});
-
-
-	allTracks.forEach((track) => {
-
-		let trackX = Number(WIDTH * track.analysis.valence);
-		let trackY = Number(HEIGHT * track.analysis.energy);
-
-
-		let currentTrackX = Number(WIDTH * thisTrack.analysis.valence);
-		let currentTrackY = Number(HEIGHT * thisTrack.analysis.energy);
-
-		let distance = getDistance(trackX, trackY, currentTrackX, currentTrackY);
-
-		if(track.id != thisTrack.id && distance < minDistance && !playedTrackIds.includes(track.id)){
-			minDistance = distance;
-			closestTrack = track; 
-		}
-
-	})
-
-	
-	if(closestTrack != null){
-		console.log("found", closestTrack);
-
-		playedTracks.push(closestTrack);			// add to played tracks
-		currentTrack = closestTrack;				// play track
-		
-	} else {
-		console.log("couldn't find a close track!");
-		getNewRecommendations(currentTrack);
-
-		setTimeout(function(){
-			getClosestTrack(currentTrack);
-		}, 1000)
-	}
-
-
-
-	
-
-	//TODO: actually play the frakkin' track
-
-}
-
-
-
-
-
-*/
-
-
-
-/* ======================================================== */
-
-// LIBRARY CODE
-
-function clear() {
-    ctx.clearRect(0, 0, WIDTH, HEIGHT);                 // creates a rectangle the size of the entire canvas that clears the area
-}
-
-function circle(x,y,r, color, stroke) {
-    ctx.beginPath();
-    ctx.arc(x, y, r, 0, Math.PI*2, false);               // start at 0, end at Math.PI*2
-    ctx.closePath();
-    ctx.fillStyle = color;
-
-    if(stroke){
-        ctx.strokeStyle = "white";
-        ctx.lineWidth = 2;
-    }
-
-    ctx.fill();
-}
-
-function rect(x,y,w,h, color) {
-    ctx.beginPath();
-    ctx.rect(x,y,w,h);
-    ctx.closePath();
-
-    ctx.strokeStyle = "black";
-    ctx.fillStyle = color;
-    ctx.stroke();
-    ctx.fill();
-}
-
-function text(text, x, y, size, color, centerAlign){
-    ctx.font =  size + "px Rajdhani";
-    ctx.fillStyle = color;
-
-    if(centerAlign){
-        ctx.textAlign = "center";
-    } else {
-        ctx.textAlign = "left";
-    }
-
-    ctx.fillText(text, x, y);
-}
-
-function line(x1, y1, x2, y2){
-    ctx.beginPath();
-    ctx.strokeStyle = "rgba(250,250,250, 0.4)";
-    ctx.moveTo(x1,y1);
-    ctx.lineTo(x2,y2);
-    ctx.stroke();
-}
-
-
-function getDistance(x1, y1, x2, y2){
-	return Math.sqrt(Math.pow((x2 - x1), 2) + Math.pow((y2 - y1), 2))
-}
-
-
-
-
-
-// // D3 stuff
-
-// var canvas = document.getElementById("song-map"),
-//     context = canvas.getContext("2d"),
-//     width = canvas.width,
-//     height = canvas.height;
-
-// var d3Canvas = d3.select("canvas");
-// d3Canvas.on('mousemove', handleMove);
-
-// var simulation = d3.forceSimulation()
-//     .force("link", d3.forceLink().id(function(d) { return d.id; }))
-//     .force("charge", d3.forceManyBody())
-//     .force("center", d3.forceCenter(width / 2, height / 2));
-
-
-// function drawMap(){
-
-// 	console.log("drawing");
-
-// 	console.log(allTracks.length);
-
-// 	var jsonData = {tracks: allTracks}
-// 	console.log(jsonData["tracks"]);
-
-
-// 	simulation
-// 		.nodes(jsonData.tracks)
-// 		.on("tick", ticked);
-
-
-// /*	simulation.force("link")
-// 		.links(jsonData.tracks);*/
-
-// 	function ticked() {
-// 	    context.clearRect(0, 0, width, height);
-// 	    context.save();
-// 	    /*context.translate(width / 2, height / 2 + 40);*/
-
-// 	    context.beginPath();
-// 	    //jsonData.tracks.forEach(drawLink);
-// 	    context.strokeStyle = "#aaa";
-// 	    context.stroke();
-// 	    context.font = "12px Arial";
-
-// 	    context.beginPath();
-// 	    jsonData.tracks.forEach(drawNode);
-// 	    context.fill();
-// 	    context.strokeStyle = "#fff";
-// 	    context.stroke();
-
-// 	    context.restore();
-// 	}
-
-// 	function drawLink(d) {
-// 		context.moveTo(d.source.x, d.source.y);
-// 		context.lineTo(d.target.x, d.target.y);
-// 	}
-
-// 	function drawNode(d) {
-
-// 		/*context.fillStyle = "white";
-		
-// 		context.fillText(d.name, d.x, d.y - 10);*/
-// 		context.fillStyle = "black";
-
-// 		context.moveTo(d.x + 3, d.y);
-// 		context.arc(d.x, d.y, 5, 0, 2 * Math.PI);
-
-// 	}
-
-
-// }
-
-
-// function handleMove() {
-// 	var point = d3.mouse(this);
-// 	var node;
-// 	var minDistance = Infinity;
-
-// 	allTracks.forEach(function(d) {
-
-// 		var dx = d.x - point[0];
-// 		var dy = d.y - point[1];
-
-// 		var distance = Math.sqrt((dx * dx) + (dy * dy));
-
-// 		if (distance < minDistance && distance < 20) {
-// 			// drawCircles(d);
-// 			minDistance = distance;
-// 			node = d;
-// 		}
-// 	});
-
-// 	if(typeof(node) == "undefined"){
-// 		return
-// 	}
-
-// 	document.getElementById("song-info").innerHTML = (
-// 		`<p>${node.name}</p>`
-// 	)
-// }
-
-
-
-

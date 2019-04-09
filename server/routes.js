@@ -27,7 +27,14 @@ router.use(function(req, res, next){                                            
 /* ROUTES */
 
 router.get("/", (req, res) =>{
-    res.render("index", {session: req.session});
+
+    if(ACCESS_TOKEN === null){
+        res.redirect("/login");
+    } else {
+        res.render("index", {session: req.session});
+    }
+
+    
     
 });
 
@@ -317,6 +324,7 @@ router.post("/play-in-app", function(req, res){
             if(err || playResponse.statusCode != 204){
                 console.log("ERROR!");
                 console.log(playResponse.body.error);
+                res.send({error: playResponse.body.error})
             } else {
 
                 console.log("IT WORKED!");
