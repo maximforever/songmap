@@ -1,5 +1,8 @@
 console.log("hello world!");
 
+let planeCount = 0;
+let planeDepth = -20;
+
 let token = null;
 let starterTrack = {
 	id: "3skn2lauGk7Dx6bVIt5DVj",
@@ -23,17 +26,51 @@ let starterTrack = {
 	  "analysis_url": "https://api.spotify.com/v1/audio-analysis/3skn2lauGk7Dx6bVIt5DVj",
 	  "duration_ms": 240213,
 	  "time_signature": 4
-	}
+	},
+	"album": {
+		"name": "Black Holes And Revelations",
+		"release_date": "2006-06-19",
+		"images": [
+		    {
+		      "height": 640,
+		      "url": "https://i.scdn.co/image/9e5288926fadb82f873ccf2b45300c3a6f65fa14",
+		      "width": 640
+		    },
+		    {
+		      "height": 300,
+		      "url": "https://i.scdn.co/image/f1cad0d6974d6236abd07a59106e8450d85cae24",
+		      "width": 300
+		    },
+		    {
+		      "height": 64,
+		      "url": "https://i.scdn.co/image/81a3f82578dc938c53efdcb405f6a3d3ebbf009f",
+		      "width": 64
+		    }
+		]  
+	},
+    "artists": [
+    {
+      "external_urls": {
+        "spotify": "https://open.spotify.com/artist/12Chz98pHFMPJEknJQMWvI"
+      },
+      "href": "https://api.spotify.com/v1/artists/12Chz98pHFMPJEknJQMWvI",
+      "id": "12Chz98pHFMPJEknJQMWvI",
+      "name": "Muse",
+      "type": "artist",
+      "uri": "spotify:artist:12Chz98pHFMPJEknJQMWvI"
+    }
+  ],
 }
 
-let searchAroundCurrentTrack = true;			// adjust search criteria around this track			
+let WIDTH, HEIGHT;
+
+
+// TODO: implement this!
+let searchAroundCurrentTrack = false;			// adjust search criteria around this track			
 
 let playedTracks = [];
 
-let currentTrack = {							
-	id: null, 
-	name: null
-}
+let currentTrack = starterTrack;				// TODO: should be null
 
 var allTracks = [];								// all the tracks we've gotten from Spotify so far
 let trackCurrentlyMousedOver = null;
@@ -43,6 +80,8 @@ let mapLoop = null;					// variable to contain canvas loop
 
 let lastMouseX = 0;					// last know mouse coordinates
 let lastMouseY = 0;
+
+let mousePressed = false;
 
 let attachClickListeners = () => {
 
@@ -69,7 +108,6 @@ let attachClickListeners = () => {
 			let uri = el.target.dataset.uri;
 
 			playInApp(uri);
-
 
 		});
 	});
@@ -171,6 +209,9 @@ function getNewRecommendations(track){
 
 	let url = "/get-recs"
 
+
+	// TODO: implement reading from sliders, enable searchAroundCurrentTrack
+
 	if(searchAroundCurrentTrack && track.analysis){
 		document.getElementById("energy").value = track.analysis.energy; 
 		document.getElementById("valence").value = track.analysis.valence; 
@@ -180,12 +221,25 @@ function getNewRecommendations(track){
 
 
 
-	let data = {
+/*	let data = {
 		seedTrack: track.id,
 		energy: Number(document.getElementById("energy").value),
 		valence: Number(document.getElementById("valence").value),
 		danceability: Number(document.getElementById("danceability").value),
 		tempo: Number(document.getElementById("tempo").value)
+	}*/
+
+	if(track.data){
+		track = track.data;
+	}
+
+
+	let data = {
+		seedTrack: track.id,
+		energy: track.analysis.energy,
+		valence: track.analysis.valence,
+		danceability: track.analysis.danceability,
+		tempo: track.analysis.tempo
 	}
 
 	fetch(url, {
@@ -215,6 +269,21 @@ function getNewRecommendations(track){
 	    		return track.id;
 	    	});
 
+	    	// add current track - the initial, seed track
+	    	if(!recordedIds.includes(track.id)){
+	    		allTracks.push(track);
+	    		addStar(track);
+
+	    		// update playing track card
+	    		scene.children.forEach((object) => {
+					if(object.type == "Mesh" && object.geometry.type == "SphereGeometry" && object.data.id == track.id){
+						currentTrack = object;
+						playedTracks.push(currentTrack);
+						updatePlayingTrackInfo(object);
+					}
+				});
+	    	}
+
 	    	// only add tracks if they're not in our db yet.
 	    	data.tracks.forEach((track) => {
 	    		if(!recordedIds.includes(track.id)){
@@ -223,13 +292,16 @@ function getNewRecommendations(track){
 	    		} else {
 	    			console.log(`Looks like ${track.name} is already in the system`);
 	    		}
-	    	})
+	    	});
 
 
-	    	document.getElementById("response").innerText = JSON.stringify(JSON.parse(res.data), false, 2);
-	    	
-	    	displayRecommendations();
-	    	//loop();					// this is the bit that draws things!
+
+	    	planeCount++;
+
+	    	// TODO: enable printout of JSON response, displaying track cards
+	    	//document.getElementById("response").innerText = JSON.stringify(JSON.parse(res.data), false, 2);
+	    	// displayRecommendations();
+
 	  });
 }
 
@@ -338,15 +410,12 @@ function playClosestTrack(thisTrack){
 
 	console.log(playedTrackIds);
 
-	console.log(thisTrack);
-
 	// cycle through the children, but only the stars
 	scene.children.forEach((object) => {
 
 		if(object.type == "Mesh" && object.geometry.type == "SphereGeometry"){
 
 			let distance = getDistanceIn3d(object.position.x, object.position.y, object.position.z,  thisTrack.position.x, thisTrack.position.y, thisTrack.position.z);
-			console.log(distance, object.data.name);
 
 			if(object.data.id != thisTrack.data.id && distance < currentMinDistance && !playedTrackIds.includes(object.data.id)){
 				currentMinDistance = distance;
@@ -367,31 +436,61 @@ function playClosestTrack(thisTrack){
 
 		playInApp(closestTrack.data.uri);
 		drawPlayedTrackPath();
+		updatePlayingTrackInfo(currentTrack);
 		
 	} else {
 		console.log("couldn't find a close track!");
 		getNewRecommendations(thisTrack.data);
 
 		setTimeout(function(){
-			playClosestTrack(thisTrack);
+			playClosestTrack(thisTrack.data);
 		}, 2000)
 	}
 
 }
 
+function updatePlayingTrackInfo(track){
+
+	// center on current track 
+	camera.position.set(track.position.x, track.position.y,  camera.position.z);
+
+	document.getElementById("album-photo").innerHTML = `<img src="${track.data.album.images[2].url}" />`;
+	document.getElementById("playing-name").innerHTML = `${track.data.name}`;
+	document.getElementById("playing-album").innerHTML = `${track.data.album.name} (${track.data.album.release_date})`;
+	document.getElementById("playing-artist").innerHTML = `${track.data.artists[0].name}`;
+
+
+	// change colors
+	scene.children.forEach((child) => {
+
+		if(child.type == "Mesh" && child.geometry.type == "SphereGeometry"){
+
+			if(track.data.id == child.data.id){
+				console.log(child.material.color);
+				child.material.color.set(0xfca420);
+				console.log(child.material.color);
+			} else {
+				child.material.color.set(0x5aaff1);
+			}
+		}
+
+	});
+
+
+	
 
 
 
-document.getElementById("get-recs").addEventListener("click", function(){
-	getNewRecommendations(starterTrack)
-});
+
+}
+
 
 document.getElementById("play-next-track").addEventListener("click", function(){
 	playClosestTrack(currentTrack);
 
 });
 
-document.getElementById("more-like-this").addEventListener("click", function(){
+document.getElementById("get-recommendations-for-current-track").addEventListener("click", function(){
 	getNewRecommendations(currentTrack)
 });
 
@@ -420,20 +519,21 @@ let camera;
 
 let raycaster = new THREE.Raycaster();				// thing that lets us select stuff in 3d space
 
-var mouse = new THREE.Vector2(), INTERSECTED;
-
-
-const WIDTH = 600;
-const HEIGHT = 600;
+let mouse = new THREE.Vector2(), INTERSECTED;
 
 let renderer = new THREE.WebGLRenderer({
 	//alpha: true, // remove canvas' bg color
 	antialias: true
 });
 
+let mapWrapper = document.getElementById("map-wrapper");
+
+WIDTH = mapWrapper.offsetWidth;
+HEIGHT = mapWrapper.offsetHeight;
+
 renderer.setSize(WIDTH, HEIGHT);
 
-document.getElementById("map-wrapper").appendChild(renderer.domElement);
+mapWrapper.appendChild(renderer.domElement);
 
 let scene = new THREE.Scene;
 
@@ -442,8 +542,11 @@ let scene = new THREE.Scene;
 // the closest & furthest things the camera can see 
 camera = new THREE.PerspectiveCamera( 45, WIDTH / HEIGHT, 0.1, 5000);
 
-//camera.position.set(430, 1020, 800);
-camera.position.set(200, 500, 250);
+let canvas = document.querySelector("canvas");
+//let controls = new THREE.OrbitControls( camera, canvas );
+
+camera.position.set(500, 540, 280);
+// controls.update();					// must be called after any manual changes to the camera's transform
 
 
 //skybox 
@@ -454,10 +557,13 @@ let skybox = new THREE.Mesh(skyboxGeometry, skyboxMaterial);
  
 scene.add(skybox);
 
-let pointLight = new THREE.PointLight(0xffffff);
-pointLight.position.set(0, 0, 1000);
+let topLight = new THREE.PointLight(0xffffff);
+//let bottomLight = new THREE.PointLight(0xffffff);
+topLight.position.set(500, 500, 500);
+//bottomLight.position.set(0, 0, 0);
  
-scene.add(pointLight);
+scene.add(topLight);
+//scene.add(bottomLight);
 
 let starGeometry = new THREE.SphereGeometry(1, 32, 32 );
 
@@ -473,14 +579,11 @@ function render() {
 
 	if(intersects.length == 1){
 
-		console.log(intersects[0].object);
-
-
 		if(intersects[0].object.geometry && intersects[0].object.geometry.type == "SphereGeometry"){
 			let thisStar = intersects[0].object;
 			thisStar.material.color.set(0xff0000);
 			document.body.style.cursor = "pointer";
-			document.getElementById("hover-track-name").innerHTML = thisStar.data.name;
+			document.getElementById("hover-track-name").innerHTML = `${thisStar.data.artists[0].name}: ${thisStar.data.name}`;
 		}
 
 
@@ -503,7 +606,7 @@ function render() {
 	} else {
 		trackCurrentlyMousedOver = null
 		document.body.style.cursor = "default";
-		document.getElementById("hover-track-name").innerHTML = "-";
+		//document.getElementById("hover-track-name").innerHTML = "-";
 		// unselect all
 		scene.children.forEach((object) => {
 			if(typeof(object.geometry) != "undefined" && object.geometry.type == "SphereGeometry"){
@@ -513,12 +616,7 @@ function render() {
 
 	}
 
-
-
-	
-
-
-	// render scene
+	displayCameraPosition();
 
     renderer.render(scene, camera);
     requestAnimationFrame(render);
@@ -538,7 +636,7 @@ function addStar(track){
 	let starMaterial = new THREE.MeshLambertMaterial({ color: 0x5aaff1 });
 
 	let star = new THREE.Mesh(starGeometry, starMaterial);
-	star.position.set(thisXposition, thisYposition, 0);
+	star.position.set(thisXposition, thisYposition, planeCount * planeDepth);		// negative so it's away from us
 
 	star.data = track;			// storing track data in the star 
 
@@ -547,9 +645,14 @@ function addStar(track){
 }
 
 function displayCameraPosition(){
-	document.getElementById("camera-x").innerText = camera.position.x;
-	document.getElementById("camera-y").innerText = camera.position.y;
-	document.getElementById("camera-z").innerText = camera.position.z;
+	document.getElementById("camera-x").innerText = Math.floor(camera.position.x * 10)/10;
+	document.getElementById("camera-y").innerText = Math.floor(camera.position.y * 10)/10;
+	document.getElementById("camera-z").innerText = Math.floor(camera.position.z * 10)/10;
+
+	//90 * Math.PI / 180
+	document.getElementById("camera-angle-x").innerText = Math.floor(camera.rotation.x * 10)/10;
+	document.getElementById("camera-angle-y").innerText = Math.floor(camera.rotation.y * 10)/10;
+	document.getElementById("camera-angle-z").innerText = Math.floor(camera.rotation.z * 10)/10;
 
 }
 
@@ -568,6 +671,9 @@ function onMouseMove( event ) {
 
 	mouse.x = ( event.offsetX / WIDTH ) * 2 - 1;
 	mouse.y = - ( event.offsetY / HEIGHT ) * 2 + 1;
+
+	mouse.x = Math.floor(mouse.x * 100)/100
+	mouse.y = Math.floor(mouse.y * 100)/100
 
 	displayMousePosition(mouse.x, mouse.y)
 
@@ -591,16 +697,17 @@ function onClick( event ){
 
 			playedTracks.push(intersects[0].object);
 
-			drawPlayedTrackPath();
-
 			currentTrack = intersects[0].object;
 
 			console.log("the new currentTrack is");
 			console.log(currentTrack);
 
+
 			//console.log(thisStar);
 			playInApp(thisStar.uri);
-			console.log(`${thisStar.name} - ${thisStar.artists[0].name}`);
+			updatePlayingTrackInfo(intersects[0].object);
+			drawPlayedTrackPath();
+
 		}
 
 	
@@ -608,15 +715,44 @@ function onClick( event ){
 
 }
 
+function onResize(){
+
+	mapWrapper = document.getElementById("map-wrapper");
+
+	WIDTH = mapWrapper.offsetWidth;
+	HEIGHT = mapWrapper.offsetHeight;
+
+	renderer.setSize(WIDTH, HEIGHT);
+
+	camera.aspect = WIDTH / HEIGHT;
+	camera.updateProjectionMatrix();
+
+}
+
 
 document.querySelector("canvas").addEventListener( 'mousemove', onMouseMove, false );
 document.querySelector("canvas").addEventListener( 'click', onClick, false );
+window.addEventListener( 'resize', onResize, false );
 
 
 
 
 
 function addCameraControls(){
+
+	document.addEventListener("mousedown", () => {
+		console.log("down");
+		mousePressed = true;
+	})
+
+	document.addEventListener("mouseup", () => {
+		console.log("up");
+		mousePressed = false;
+	})
+
+
+
+
 	document.addEventListener("keydown",(e) => {
 
 
@@ -662,25 +798,25 @@ function addCameraControls(){
 
 
 		if(e.which == 76){
-			camera.rotation.z -= (5 * Math.PI / 180);
-			displayCameraPosition();
-		}
-
-
-		if(e.which == 74){
-			camera.rotation.z += (5 * Math.PI / 180);
-			displayCameraPosition();
-		}
-
-
-		if(e.which == 73){
 			camera.rotation.y -= (5 * Math.PI / 180);
 			displayCameraPosition();
 		}
 
 
-		if(e.which == 75){
+		if(e.which == 74){
 			camera.rotation.y += (5 * Math.PI / 180);
+			displayCameraPosition();
+		}
+
+
+		if(e.which == 73){
+			camera.rotation.x += (5 * Math.PI / 180);
+			displayCameraPosition();
+		}
+
+
+		if(e.which == 75){
+			camera.rotation.x -= (5 * Math.PI / 180);
 			displayCameraPosition();
 		}
 

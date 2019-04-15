@@ -31,7 +31,7 @@ router.get("/", (req, res) =>{
     if(ACCESS_TOKEN === null){
         res.redirect("/login");
     } else {
-        res.render("index", {session: req.session});
+        res.render("map", {session: req.session});
     }
 
     

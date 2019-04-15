@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+
+<HTML>
+    <HEAD> 
+        <TITLE>Song Map</TITLE>
+        <meta charset="utf-8">
+
+        <!--  Google Fonts -->
+
+        <!-- fonts -->
+        <link href="https://fonts.googleapis.com/css?family=Montserrat:300,400,600" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css?family=Cutive+Mono" rel="stylesheet">
+
+        <!-- Browser icon -->
+        <link rel="icon" href="./assets/images/icon.png" />
+
+        <!-- Font awesome -->
+        <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.3.1/css/all.css" integrity="sha384-mzrmE5qonljUremFsqc01SB46JvROS7bZs3IO2EmfFsd15uHvIt+Y8vEf7N7fWAU" crossorigin="anonymous">
+        <meta name="viewport" content="width=device-width,initial-scale=1.0">
+        
+        <!-- CSS -->
+        <link rel="stylesheet" type="text/css" href="./map-stylesheet.css"></style>
+
+    </HEAD>
+
+
+    <BODY>
+
+        <div id ="debug-panel">
+            <div id = "camera-position">
+                {
+                <span id="camera-x">-</span>, 
+                <span id="camera-y">-</span>, 
+                <span id="camera-z">-</span>
+                }
+            </div>
+
+            <div id = "camera-rotation">
+                {
+                <span id="camera-angle-x">-</span>, 
+                <span id="camera-angle-y">-</span>, 
+                <span id="camera-angle-z">-</span>
+                }
+            </div>
+
+            <div id = "mouse-position">
+                {
+                <span id="mouse-x">-</span>, 
+                <span id="mouse-y">-</span>
+                }
+            </div>
+
+            <div id = "hover-track-name">-</div>
+        </div>
+
+        <div id="page-wrapper">
+            <div id="map-wrapper">
+            </div>
+
+            <div id="control-panel-wrapper">
+                <input id="song" placeholder="some-song"/><button id="search-songs">Search songs</button>
+
+                <div id = "play-controls">
+                    <button id="play-next-track"><i class="fas fa-forward"></i></button>
+                    <button id="get-recommendations-for-current-track"><i class="far fa-thumbs-up"></i></button>
+                </div>
+
+                <div id = "now-playing">
+                    <div id="album-photo"></div>
+                    <div id="playing-metadata">
+                        <div id="playing-name"></div>
+                        <div id="playing-album"></div>
+                        <div id="playing-artist"></div>
+                    </div>
+                </div>
+            </div>
+
+
+
+        </div>
+
+
+
+
+        <script src="./assets/three.js"></script>
+        <script src="./assets/OrbitControls.js"></script>
+        <script src="https://d3js.org/d3.v4.min.js"></script>
+        <script src="./script.js"></script>
+    </BODY>
+</HTML>

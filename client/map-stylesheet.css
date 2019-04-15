@@ -1,0 +1,97 @@
+*:focus {outline:none}
+
+body {
+	background: #021425;
+	color: #ffffff;
+	padding: 0;
+	margin: 0;
+}
+
+a, a:visited {
+    color: #2a99c7;
+    text-decoration: none;
+}
+
+a:hover {
+	color: #63d1ff;
+}
+
+button:hover {
+	color: orange;
+	cursor: pointer;
+}
+
+
+
+#page-wrapper {
+	display: flex;
+	flex-direction: column;
+	min-height: 100vh;
+}
+
+#map-wrapper {
+    display: flex;
+    flex-grow: 1;
+    justify-content: center;
+    align-items: center;
+}
+
+#control-panel-wrapper {
+    display: flex;
+    min-height: 8rem;
+    background: #11375a;
+    align-items: center;
+    justify-content: space-around;
+}
+
+#control-panel-wrapper button {
+    background: no-repeat;
+    border: none;
+    color: #e2e2ff;
+    font-size: 1rem;
+}
+
+#control-panel-wrapper button:hover {
+    color: orange;
+}
+
+#debug-panel {
+    background: #11375a;
+    color: #d2d2f9;
+    padding: 0.5rem;
+    position: absolute;
+    top: 0.5rem;
+    left: 0.5rem;
+    border-radius: 5px;
+    width: 30vw;
+    font-size: 0.8rem;
+}
+
+
+
+/* album info */
+
+#now-playing {
+    width: 300px;
+    display: flex;
+    justify-content: space-around;
+    padding: 0.6rem;
+    background: #05223e;
+    border-radius: 0.2rem;
+    min-height: 64px;
+}
+
+#album-photo {
+	display: flex;
+    justify-content: center;
+    align-items: center;
+    padding-right: 0.7rem;
+}
+
+#playing-metadata {
+	display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    color: #d2d2f9;
+}
+
