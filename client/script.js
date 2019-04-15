@@ -452,7 +452,7 @@ function playClosestTrack(thisTrack){
 function updatePlayingTrackInfo(track){
 
 	// center on current track 
-	camera.position.set(track.position.x, track.position.y,  camera.position.z);
+	//camera.position.set(track.position.x, track.position.y,  camera.position.z);
 
 	document.getElementById("album-photo").innerHTML = `<img src="${track.data.album.images[2].url}" />`;
 	document.getElementById("playing-name").innerHTML = `${track.data.name}`;
@@ -475,10 +475,6 @@ function updatePlayingTrackInfo(track){
 		}
 
 	});
-
-
-	
-
 
 
 
@@ -576,6 +572,7 @@ function render() {
 	// calculate objects intersecting the picking ray
 	var intersects = raycaster.intersectObjects( scene.children );
 
+//	console.log(intersects.length);
 
 	if(intersects.length == 1){
 
@@ -606,7 +603,7 @@ function render() {
 	} else {
 		trackCurrentlyMousedOver = null
 		document.body.style.cursor = "default";
-		//document.getElementById("hover-track-name").innerHTML = "-";
+		document.getElementById("hover-track-name").innerHTML = "-";
 		// unselect all
 		scene.children.forEach((object) => {
 			if(typeof(object.geometry) != "undefined" && object.geometry.type == "SphereGeometry"){
@@ -735,18 +732,19 @@ document.querySelector("canvas").addEventListener( 'click', onClick, false );
 window.addEventListener( 'resize', onResize, false );
 
 
+function updateLightPosition(){
+	topLight.position.set(camera.position.x, camera.position.y, camera.position.z);
+}
 
 
 
 function addCameraControls(){
 
 	document.addEventListener("mousedown", () => {
-		console.log("down");
 		mousePressed = true;
 	})
 
 	document.addEventListener("mouseup", () => {
-		console.log("up");
 		mousePressed = false;
 	})
 
@@ -755,6 +753,7 @@ function addCameraControls(){
 
 	document.addEventListener("keydown",(e) => {
 
+		updateLightPosition();
 
 		if(e.which == 65){
 			camera.position.x -= 10;

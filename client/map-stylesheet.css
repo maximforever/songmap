@@ -55,6 +55,18 @@ button:hover {
     color: orange;
 }
 
+#play-controls button {
+	font-size: 2rem;
+	padding: 1rem;	
+}
+
+#search-controls {
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+    min-height: 3rem;
+}
+
 #debug-panel {
     background: #11375a;
     color: #d2d2f9;
