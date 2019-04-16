@@ -10,6 +10,7 @@
         <!-- fonts -->
         <link href="https://fonts.googleapis.com/css?family=Montserrat:300,400,600" rel="stylesheet">
         <link href="https://fonts.googleapis.com/css?family=Cutive+Mono" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css?family=Exo:300,500" rel="stylesheet">
 
         <!-- Browser icon -->
         <link rel="icon" href="./assets/images/icon.png" />
@@ -50,7 +51,75 @@
                 }
             </div>
 
-            <div id = "hover-track-name">-</div>
+        </div>
+
+        <div id="explore-controls">
+            <!--             
+            <div id="search-controls">
+                <input id="song" placeholder="some-song"/>
+                <button id="search-songs">Search songs</button>
+            </div> -->
+
+            <div class = "explore-controls-section" id="axis-controls">
+                
+                <div class="dropdown-wrapper">
+                    x-axis: 
+                        <select id="x-axis-selector">
+                          <option value="energy">Energy</option>
+                          <option value="valence" selected>Valence</option>
+                          <option value="danceability">Danceability</option>
+                          <option value="instrumentalness">Instrumentalness</option>
+                        </select>
+                </div>
+
+                <div class="dropdown-wrapper">
+                    y-axis: 
+                    <select id="y-axis-selector">
+                      <option value="energy" selected>Energy</option>
+                      <option value="valence">Valence</option>
+                      <option value="danceability">Danceability</option>
+                      <option value="instrumentalness">Instrumentalness</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class = "explore-controls-section"  id="search-controls">
+                <div class="one-slider">
+                    <div class="slider-label">
+                        Energy <span id="energy-value">0.0</span>
+                    </div>
+                    <input type="range" min="0" max="1" value="0.5" class="slider" step="0.1" id="energy">
+                </div>
+
+                <div class="one-slider">
+                    <div class="slider-label">
+                        Danceability <span id="danceability-value">0.0</span>
+                    </div>
+                    <input type="range" min="0" max="1" value="0.5" class="slider" step="0.1" id="danceability">
+                </div>
+
+                <div class="one-slider">
+                    <div class="slider-label">
+                        Valence <span id="valence-value">0.0</span>
+                    </div>
+                    <input type="range" min="0" max="1" value="0.5" class="slider" step="0.1" id="valence">
+                </div>
+
+                <div class="one-slider">
+                    <div class="slider-label">
+                        Tempo <span id="tempo-value">120</span>
+                    </div>
+                    <input type="range" min="60" max="180" value="120" class="slider" step="10" id="tempo">
+                </div>
+            </div>
+
+            <div class = "explore-controls-section"  id="like-controls">
+                
+                <input type="checkbox" id="manual-control" name="like-select" value="manual"> Manual control<br>
+                <input type="checkbox" id="like-this-song" name="like-select" value="song"> I like this song<br>
+                <input type="checkbox" id="like-this-artist"name="like-select" value="artist"> I like this artist<br>
+                <a href='#'>Display all by this artist</a>
+            </div>
         </div>
 
         <div id="page-wrapper">
@@ -58,19 +127,17 @@
             </div>
 
             <div id="control-panel-wrapper">
-                
-                <div id="search-controls">
-                    <input id="song" placeholder="some-song"/>
-                    <button id="search-songs">Search songs</button>
-                </div>
-                
+
                 <div id = "play-controls">
+                    
                     <button id="play-next-track"><i class="fas fa-forward"></i></button>
                     <button id="get-recommendations-for-current-track"><i class="far fa-thumbs-up"></i></button>
                 </div>
 
+                <button id="toggle-explore-controls"><i class="fas fa-bars"></i></button>
+
                 <div id = "now-playing">
-                    <div id="album-photo"></div>
+                    <div id="playing-album-photo"></div>
                     <div id="playing-metadata">
                         <div id="playing-name"></div>
                         <div id="playing-album"></div>

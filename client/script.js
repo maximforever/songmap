@@ -7,6 +7,7 @@ let token = null;
 let starterTrack = {
 	id: "3skn2lauGk7Dx6bVIt5DVj",
 	name: "Starlight",
+	uri: "spotify:track:3skn2lauGk7Dx6bVIt5DVj",
 	analysis: {
 	  "danceability": 0.55,
 	  "energy": 0.874,
@@ -62,6 +63,14 @@ let starterTrack = {
   ],
 }
 
+
+let axisSelection = {
+	x: "valence",
+	y: "energy"
+}
+
+
+
 let WIDTH, HEIGHT;
 
 
@@ -71,8 +80,10 @@ let searchAroundCurrentTrack = false;			// adjust search criteria around this tr
 let playedTracks = [];
 
 let currentTrack = starterTrack;				// TODO: should be null
+let currentlyPlayingTrack = null;
 
-var allTracks = [];								// all the tracks we've gotten from Spotify so far
+
+let allTracks = [];								// all the tracks we've gotten from Spotify so far
 let trackCurrentlyMousedOver = null;
 
 
@@ -82,6 +93,16 @@ let lastMouseX = 0;					// last know mouse coordinates
 let lastMouseY = 0;
 
 let mousePressed = false;
+
+let exploreWithManualControl = false;
+let exploreAroundSong = false;
+let songToExploreAround = null;
+
+
+
+/* functions */
+
+
 
 let attachClickListeners = () => {
 
@@ -99,19 +120,6 @@ let attachClickListeners = () => {
 			getNewRecommendations(currentTrack);
 		});
 	})
-
-
-
-
-	document.querySelectorAll(".play-in-app").forEach(function(button){
-		button.addEventListener("click", (el) => {
-			let uri = el.target.dataset.uri;
-
-			playInApp(uri);
-
-		});
-	});
-
 
 }
 
@@ -205,34 +213,18 @@ function getNewRecommendations(track){
 
 	console.log(track);
 
-	currentTrack = track;
-
-	let url = "/get-recs"
-
-
-	// TODO: implement reading from sliders, enable searchAroundCurrentTrack
-
-	if(searchAroundCurrentTrack && track.analysis){
-		document.getElementById("energy").value = track.analysis.energy; 
-		document.getElementById("valence").value = track.analysis.valence; 
-		document.getElementById("danceability").value = track.analysis.danceability; 
-		document.getElementById("tempo").value = track.analysis.tempo; 	
+	// play if nothing is playing
+	if(currentlyPlayingTrack === null){
+		setNewTrackParameters(track);
+		playInApp(track.uri)
+		currentlyPlayingTrack = track;
 	}
 
-
-
-/*	let data = {
-		seedTrack: track.id,
-		energy: Number(document.getElementById("energy").value),
-		valence: Number(document.getElementById("valence").value),
-		danceability: Number(document.getElementById("danceability").value),
-		tempo: Number(document.getElementById("tempo").value)
-	}*/
+	let url = "/get-recs"
 
 	if(track.data){
 		track = track.data;
 	}
-
 
 	let data = {
 		seedTrack: track.id,
@@ -241,6 +233,32 @@ function getNewRecommendations(track){
 		danceability: track.analysis.danceability,
 		tempo: track.analysis.tempo
 	}
+
+	if(exploreAroundSong){
+		data = {
+			seedTrack: songToExploreAround.id,
+			min_energy: (track.analysis.energy  - 0.2),
+			min_valence: (track.analysis.valence - 0.2),
+			min_danceability: (track.analysis.danceability - 0.2),
+			max_energy: (track.analysis.energy + 0.2),
+			max_valence: (track.analysis.valence  + 0.2),
+			max_danceability: (track.analysis.danceability + 0.2),
+			tempo: track.analysis.tempo
+		}
+	}
+
+	if(exploreWithManualControl){
+		data = {
+			seedTrack: track.id,
+			energy: Number(document.getElementById("energy").value),
+			valence: Number(document.getElementById("valence").value),
+			danceability: Number(document.getElementById("danceability").value),
+			tempo: Number(document.getElementById("tempo").value)
+		}
+	}
+
+	console.log(data);
+
 
 	fetch(url, {
 		method: "POST",
@@ -276,12 +294,13 @@ function getNewRecommendations(track){
 
 	    		// update playing track card
 	    		scene.children.forEach((object) => {
-					if(object.type == "Mesh" && object.geometry.type == "SphereGeometry" && object.data.id == track.id){
-						currentTrack = object;
+					if(object.star && object.data.id == track.id){
+						currentlyPlayingTrack = currentTrack = object;
 						playedTracks.push(currentTrack);
-						updatePlayingTrackInfo(object);
 					}
 				});
+
+				displayUpdatedSliderValues();
 	    	}
 
 	    	// only add tracks if they're not in our db yet.
@@ -290,17 +309,11 @@ function getNewRecommendations(track){
 	    			allTracks.push(track);
 	    			addStar(track);
 	    		} else {
-	    			console.log(`Looks like ${track.name} is already in the system`);
+	    			//console.log(`Looks like ${track.name} is already in the system`);
 	    		}
 	    	});
 
-
-
 	    	planeCount++;
-
-	    	// TODO: enable printout of JSON response, displaying track cards
-	    	//document.getElementById("response").innerText = JSON.stringify(JSON.parse(res.data), false, 2);
-	    	// displayRecommendations();
 
 	  });
 }
@@ -391,15 +404,25 @@ function drawPlayedTrackPath(){
 }
 
 function removePastPlayedTrackPath(){
-	let previousLine = scene.children.forEach((child) => {
-		if(child.type == "Line"){
-			scene.remove(child);
+	let previousLine = scene.children.forEach((object) => {
+		if(object.type == "Line"){
+			scene.remove(object);
 		}
 	});
 }
 
 
 function playClosestTrack(thisTrack){
+
+
+
+	console.log(thisTrack);
+
+
+	if(scene.children.length < 4){
+		console.log("nothing to play!");
+		return;
+	}
 
 	let currentMinDistance = Infinity;
 	let closestTrack = null;
@@ -408,75 +431,51 @@ function playClosestTrack(thisTrack){
 		return track.data.id;
 	});
 
-	console.log(playedTrackIds);
+	if(playedTracks.length == allTracks.length){
+		console.log("nothing left to play");
+	} else {
+		// cycle through the children, but only the stars
+		scene.children.forEach((object) => {
+			if(object.star){
 
-	// cycle through the children, but only the stars
-	scene.children.forEach((object) => {
+				let distance = getDistanceIn3d(object.position.x, object.position.y, object.position.z,  thisTrack.position.x, thisTrack.position.y, thisTrack.position.z);
 
-		if(object.type == "Mesh" && object.geometry.type == "SphereGeometry"){
-
-			let distance = getDistanceIn3d(object.position.x, object.position.y, object.position.z,  thisTrack.position.x, thisTrack.position.y, thisTrack.position.z);
-
-			if(object.data.id != thisTrack.data.id && distance < currentMinDistance && !playedTrackIds.includes(object.data.id)){
-				currentMinDistance = distance;
-				closestTrack = object; 
+				if(object.data.id != thisTrack.data.id && distance < currentMinDistance && !playedTrackIds.includes(object.data.id)){
+					currentMinDistance = distance;
+					closestTrack = object; 
+				} 
 			}
-		}
+		})
 
-	})
+	}
 
-	
 	if(closestTrack != null){
 		console.log("found closest track: ", closestTrack.data.name);
 
 		playedTracks.push(closestTrack);			// add to played tracks
 
-		currentTrack = closestTrack;
+		setNewTrackParameters(closestTrack.data);
+
+
+		
+		playInApp(closestTrack.data.uri);
+		currentlyPlayingTrack = currentTrack = closestTrack;
 		playedTracks.push(closestTrack);
 
-		playInApp(closestTrack.data.uri);
+
+		closestTrack.actions.currentlyPlaying = true;
+
+		
 		drawPlayedTrackPath();
-		updatePlayingTrackInfo(currentTrack);
 		
 	} else {
 		console.log("couldn't find a close track!");
 		getNewRecommendations(thisTrack.data);
 
 		setTimeout(function(){
-			playClosestTrack(thisTrack.data);
+			playClosestTrack(thisTrack);
 		}, 2000)
 	}
-
-}
-
-function updatePlayingTrackInfo(track){
-
-	// center on current track 
-	//camera.position.set(track.position.x, track.position.y,  camera.position.z);
-
-	document.getElementById("album-photo").innerHTML = `<img src="${track.data.album.images[2].url}" />`;
-	document.getElementById("playing-name").innerHTML = `${track.data.name}`;
-	document.getElementById("playing-album").innerHTML = `${track.data.album.name} (${track.data.album.release_date})`;
-	document.getElementById("playing-artist").innerHTML = `${track.data.artists[0].name}`;
-
-
-	// change colors
-	scene.children.forEach((child) => {
-
-		if(child.type == "Mesh" && child.geometry.type == "SphereGeometry"){
-
-			if(track.data.id == child.data.id){
-				console.log(child.material.color);
-				child.material.color.set(0xfca420);
-				console.log(child.material.color);
-			} else {
-				child.material.color.set(0x5aaff1);
-			}
-		}
-
-	});
-
-
 
 }
 
@@ -488,10 +487,6 @@ document.getElementById("play-next-track").addEventListener("click", function(){
 
 document.getElementById("get-recommendations-for-current-track").addEventListener("click", function(){
 	getNewRecommendations(currentTrack)
-});
-
-document.getElementById("search-songs").addEventListener("click", function(){
-	searchSongs(document.getElementById("song").value)
 });
 
 
@@ -524,8 +519,8 @@ let renderer = new THREE.WebGLRenderer({
 
 let mapWrapper = document.getElementById("map-wrapper");
 
-WIDTH = mapWrapper.offsetWidth;
-HEIGHT = mapWrapper.offsetHeight;
+WIDTH = window.innerWidth;
+HEIGHT = window.innerHeight;
 
 renderer.setSize(WIDTH, HEIGHT);
 
@@ -541,7 +536,7 @@ camera = new THREE.PerspectiveCamera( 45, WIDTH / HEIGHT, 0.1, 5000);
 let canvas = document.querySelector("canvas");
 //let controls = new THREE.OrbitControls( camera, canvas );
 
-camera.position.set(500, 540, 280);
+camera.position.set(480, 640, 260);
 // controls.update();					// must be called after any manual changes to the camera's transform
 
 
@@ -570,44 +565,54 @@ function render() {
 	raycaster.setFromCamera( mouse, camera );
 
 	// calculate objects intersecting the picking ray
-	var intersects = raycaster.intersectObjects( scene.children );
+	let intersects = raycaster.intersectObjects( scene.children );
 
 //	console.log(intersects.length);
 
-	if(intersects.length == 1){
 
-		if(intersects[0].object.geometry && intersects[0].object.geometry.type == "SphereGeometry"){
-			let thisStar = intersects[0].object;
-			thisStar.material.color.set(0xff0000);
-			document.body.style.cursor = "pointer";
-			document.getElementById("hover-track-name").innerHTML = `${thisStar.data.artists[0].name}: ${thisStar.data.name}`;
-		}
+	scene.children.forEach((object) => {
+		
+		if(object.star){
 
-
-		// this is a veeeery ugly way of checking if we're already displaying this card
-		if(trackCurrentlyMousedOver !== null){
-			document.getElementById("current-track").innerHTML = getTrackCard(trackCurrentlyMousedOver);
-			
-			if(trackCurrentlyMousedOver.preview_url == null){
-				let divs = document.querySelectorAll(".one-track");
-				divs[0].classList += " no-preview";
+			if(object.actions.hover){
+				object.material.color.set(0xff0000);
+			} else if(object.actions.currentlyPlaying){
+				object.material.color.set(0xf77700);
+			} else if(object.actions.previouslyPlayed){
+				object.material.color.set(0x94ff7a);
 			} else {
-				let previewDivs = document.querySelectorAll(".track-preview");
-				previewDivs[0].innerHTML += `<a href = "${trackCurrentlyMousedOver.preview_url}" target="_blank">Preview</a>`;
-
+				object.material.color.set(0x1e9dff);
 			}
 
-			
 		}
+
+	});
+
+
+
+	if(intersects.length == 1 && intersects[0].object.star){
+			
+			let thisStar = intersects[0].object;
+			thisStar.actions.hover = true;
+			document.body.style.cursor = "pointer";
+			displayTrack(thisStar.data);
 
 	} else {
 		trackCurrentlyMousedOver = null
 		document.body.style.cursor = "default";
-		document.getElementById("hover-track-name").innerHTML = "-";
+
+
+		let trackToDisplay = typeof(currentTrack.data) != "undefined" ? currentTrack.data : currentTrack;
+		
+		if(document.getElementById("playing-name").innerText != trackToDisplay.name){
+			displayTrack(trackToDisplay);
+		}
+		
+		
 		// unselect all
 		scene.children.forEach((object) => {
-			if(typeof(object.geometry) != "undefined" && object.geometry.type == "SphereGeometry"){
-				object.material.color.set(0x5aaff1);
+			if(object.star){
+				object.actions.hover = false;
 			}
 		})
 
@@ -618,6 +623,13 @@ function render() {
     renderer.render(scene, camera);
     requestAnimationFrame(render);
 }
+
+function displayTrack(track){
+	document.getElementById("playing-album-photo").innerHTML = `<img src="${track.album.images[2].url}" />`;
+	document.getElementById("playing-name").innerHTML = `${track.name}`;
+	document.getElementById("playing-album").innerHTML = `${track.album.name} (${track.album.release_date})`;
+	document.getElementById("playing-artist").innerHTML = `${track.artists[0].name}`;
+}
  
 
 
@@ -627,8 +639,8 @@ addCameraControls();
 
 function addStar(track){
 
-	let thisXposition = WIDTH * track.analysis.valence; //*4;
-	let thisYposition = HEIGHT * track.analysis.energy; //*4;
+	let thisXposition = WIDTH * track.analysis[axisSelection.x]; //*4;
+	let thisYposition = HEIGHT * track.analysis[axisSelection.y]; //*4;
 
 	let starMaterial = new THREE.MeshLambertMaterial({ color: 0x5aaff1 });
 
@@ -637,8 +649,28 @@ function addStar(track){
 
 	star.data = track;			// storing track data in the star 
 
+	star.star = true;			// how we know this is a star
+
+	star.actions = {
+		currentlyPlaying: false,
+		hover: false
+	}
+
+
 	scene.add(star);
 	//camera.lookAt(star.position);
+}
+
+function updateStarPositions(){
+
+	scene.children.forEach((object) => {
+		if(object.star){
+			let thisStar = object;
+			thisStar.position.x = WIDTH * thisStar.data.analysis[axisSelection.x];
+			thisStar.position.y = WIDTH * thisStar.data.analysis[axisSelection.y];
+		}
+	});
+
 }
 
 function displayCameraPosition(){
@@ -682,27 +714,28 @@ function onClick( event ){
 	raycaster.setFromCamera( mouse, camera );
 
 	// calculate objects intersecting the picking ray
-	var intersects = raycaster.intersectObjects( scene.children );
+	let intersects = raycaster.intersectObjects( scene.children );
 
 
 	if(intersects.length == 1){
 
-		if(typeof(intersects[0].object.geometry) != "undefined" && intersects[0].object.geometry.type == "SphereGeometry"){
+		if(intersects[0].object.star){
+
+			intersects[0].object.actions.currentlyPlaying = true;
 			let thisStar = intersects[0].object.data;
 
 			//getNewRecommendations(thisStar);
 
 			playedTracks.push(intersects[0].object);
 
-			currentTrack = intersects[0].object;
+			setNewTrackParameters(thisStar);
+			playInApp(thisStar.uri);
+			currentlyPlayingTrack = currentTrack = intersects[0].object;
 
 			console.log("the new currentTrack is");
 			console.log(currentTrack);
 
-
-			//console.log(thisStar);
-			playInApp(thisStar.uri);
-			updatePlayingTrackInfo(intersects[0].object);
+			
 			drawPlayedTrackPath();
 
 		}
@@ -716,8 +749,8 @@ function onResize(){
 
 	mapWrapper = document.getElementById("map-wrapper");
 
-	WIDTH = mapWrapper.offsetWidth;
-	HEIGHT = mapWrapper.offsetHeight;
+	WIDTH = window.innerWidth;
+	HEIGHT = window.innerHeight;
 
 	renderer.setSize(WIDTH, HEIGHT);
 
@@ -726,10 +759,78 @@ function onResize(){
 
 }
 
+function toggleExploreControls(){
+
+	let panelIsDisplayed = document.getElementById("explore-controls").style.display;
+	document.getElementById("explore-controls").style.display = (panelIsDisplayed == "flex") ? "none" : "flex";
+	exploreAroundSong = false;
+}
+
+function toggleExploringAroundSong() {
+ 
+	exploreAroundSong = document.getElementById("like-this-song").checked;
+	document.getElementById("manual-control").checked = false;
+	exploreWithManualControl = false;
+
+	if(exploreAroundSong){
+		let track = typeof(currentTrack.data) != "undefined" ? currentTrack.data : currentTrack;
+
+		document.getElementById("energy-value").innerText = Math.floor(track.analysis.energy * 100) / 100; 
+		document.getElementById("valence-value").innerText = Math.floor(track.analysis.valence * 100) / 100; 
+		document.getElementById("danceability-value").innerText = Math.floor(track.analysis.danceability * 100) / 100; 
+		document.getElementById("tempo-value").innerText = Math.floor(track.analysis.tempo * 10) / 10; 
+
+		songToExploreAround = track;	
+	} else {
+		songToExploreAround = null;
+	}
+
+}
+
+function toggleExploringWithManualControl() {
+
+	exploreWithManualControl = document.getElementById("manual-control").checked;
+	document.getElementById("like-this-song").checked = false;
+	exploreAroundSong = false;
+
+}
+
+function updateAxes(){
+	axisSelection.x = document.getElementById("x-axis-selector").value;
+	axisSelection.y = document.getElementById("y-axis-selector").value;
+
+	updateStarPositions();
+
+	removePastPlayedTrackPath();
+	drawPlayedTrackPath();
+
+}
+
+
 
 document.querySelector("canvas").addEventListener( 'mousemove', onMouseMove, false );
 document.querySelector("canvas").addEventListener( 'click', onClick, false );
+document.getElementById("toggle-explore-controls").addEventListener( 'click', toggleExploreControls, false );
+document.getElementById("like-this-song").addEventListener( 'click', toggleExploringAroundSong, false );
+document.getElementById("manual-control").addEventListener( 'click', toggleExploringWithManualControl, false );
+document.getElementById("like-this-artist").addEventListener( 'click', toggleExploreControls, false );
+
+document.getElementById("x-axis-selector").addEventListener('change', updateAxes, false);
+document.getElementById("y-axis-selector").addEventListener('change', updateAxes, false);
+
 window.addEventListener( 'resize', onResize, false );
+
+document.querySelectorAll(".slider").forEach((slider) => {
+	slider.addEventListener( 'click', () => {
+		
+		exploreWithManualControl = true;
+		exploreAroundSong = false;
+		document.getElementById("like-this-song").checked = false;
+		document.getElementById("manual-control").checked = true;
+
+		displayUpdatedSliderValues();
+	});
+});
 
 
 function updateLightPosition(){
@@ -827,8 +928,44 @@ function addCameraControls(){
 
 }
 
+function markCurrentTrackAsPlayed(){
+
+	scene.children.forEach((object) => {
+
+		if(object.star && object.data.id == currentTrack.data.id){
+			object.actions.currentlyPlaying = false;
+			object.actions.previouslyPlayed = true;
+		}
+
+	});
+}
+
+function setNewTrackParameters(track){
+
+	if(!exploreAroundSong && !exploreWithManualControl){
+		document.getElementById("energy").value = track.analysis.energy; 
+		document.getElementById("valence").value = track.analysis.valence; 
+		document.getElementById("danceability").value = track.analysis.danceability; 
+		document.getElementById("tempo").value = track.analysis.tempo; 
+
+		document.getElementById("energy-value").innerText = Math.floor(track.analysis.energy * 100) / 100; 
+		document.getElementById("valence-value").innerText = Math.floor(track.analysis.valence * 100) / 100; 
+		document.getElementById("danceability-value").innerText = Math.floor(track.analysis.danceability * 100) / 100; 
+		document.getElementById("tempo-value").innerText = Math.floor(track.analysis.tempo * 10) / 10; 
+	}
+}
+
+function displayUpdatedSliderValues(){
+	document.getElementById("energy-value").innerText = Math.floor(document.getElementById("energy").value * 10) / 10; ; 
+	document.getElementById("valence-value").innerText = Math.floor(document.getElementById("valence").value * 10) / 10; ; 
+	document.getElementById("danceability-value").innerText = Math.floor(document.getElementById("danceability").value * 10) / 10; ; 
+	document.getElementById("tempo-value").innerText = document.getElementById("tempo").value; 
+}
+
 
 function playInApp(uri){
+
+	markCurrentTrackAsPlayed();
 
 	let data = {
 		uri: uri

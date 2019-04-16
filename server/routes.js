@@ -126,8 +126,72 @@ router.post("/get-recs", (req, res) => {
 
 
             // we have to specify the market, or we don't get a preview
-            let completeUrl = `
-                ${baseUrl}?limit=${limit}&seed_tracks=${seed_tracks}&market=US&target_danceability=${danceability}&target_valence=${valence}&target_energy=${energy}&target_tempo=${tempo}`;
+        /*    let completeUrl = `
+                ${baseUrl}?limit=${limit}&seed_tracks=${seed_tracks}&market=US&target_danceability=${danceability}&target_valence=${valence}&target_energy=${energy}&target_tempo=${tempo}`;*/
+            
+            let completeUrl = `${baseUrl}?limit=${limit}`;
+
+            if(req.body.seedTrack != null){
+                let seed_tracks=req.body.seedTrack;
+                completeUrl += `&seed_tracks=${seed_tracks}`;
+            }
+
+            if(req.body.danceability != null){
+                let danceability=req.body.danceability;
+                completeUrl += `&target_danceability=${danceability}`;
+            }
+
+            if(req.body.valence != null){
+                let valence=req.body.valence;
+                completeUrl += `&target_valence=${valence}`;
+            }
+
+            if(req.body.energy != null){
+                let energy=req.body.energy;
+                completeUrl += `&target_energy=${energy}`;
+            }
+
+            if(req.body.tempo != null){
+                let tempo=req.body.tempo;
+                completeUrl += `&target_tempo=${tempo}`;
+            }
+
+
+
+
+            if(req.body.min_danceability != null){
+                let min_danceability=req.body.min_danceability;
+                completeUrl += `&min_danceability=${min_danceability}`;
+            }
+
+            if(req.body.min_valence != null){
+                let min_valence=req.body.min_valence;
+                completeUrl += `&min_valence=${min_valence}`;
+            }
+
+            if(req.body.min_energy != null){
+                let min_energy=req.body.min_energy;
+                completeUrl += `&min_energy=${min_energy}`;
+            }
+
+            if(req.body.min_danceability != null){
+                let max_danceability=req.body.max_danceability;
+                completeUrl += `&max_danceability=${max_danceability}`;
+            }
+
+            if(req.body.max_valence != null){
+                let max_valence=req.body.max_valence;
+                completeUrl += `&max_valence=${max_valence}`;
+            }
+
+            if(req.body.max_energy != null){
+                let max_energy=req.body.max_energy;
+                completeUrl += `&max_energy=${max_energy}`;
+            }
+
+
+
+
             console.log(completeUrl);
             
             let authWithToken = "Bearer " + token;
