@@ -156,6 +156,12 @@ select {
     color: #d2d2f9;
 }
 
+#playing-artist, #playing-album {
+	color: #4496e2;
+	font-weight: 300;
+}
+
+
 /* explore controls */
 
 #explore-controls {
@@ -172,7 +178,7 @@ select {
     left: 1rem;
     position: absolute;
 
-    transform: translateY(40%);
+    transform: translateY(35%);
 
 }
 

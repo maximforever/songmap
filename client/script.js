@@ -627,7 +627,7 @@ function render() {
 function displayTrack(track){
 	document.getElementById("playing-album-photo").innerHTML = `<img src="${track.album.images[2].url}" />`;
 	document.getElementById("playing-name").innerHTML = `${track.name}`;
-	document.getElementById("playing-album").innerHTML = `${track.album.name} (${track.album.release_date})`;
+	document.getElementById("playing-album").innerHTML = `${track.album.name}`;
 	document.getElementById("playing-artist").innerHTML = `${track.artists[0].name}`;
 }
  
