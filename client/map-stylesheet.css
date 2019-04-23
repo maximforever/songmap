@@ -74,7 +74,7 @@ select {
     justify-content: center;
 }
 
-#play-controls button:not(#toggle-explore-controls) {
+#play-controls button:not(#toggle-explore-controls):not( #toggle-instructions) {
 	font-size: 2rem;
 	padding: 1rem 1.5rem;	
 }
@@ -131,13 +131,18 @@ select {
     bottom: 0.5rem;
 }
 
-#toggle-explore-controls {
+#toggle-explore-controls, #toggle-instructions {
 	position: absolute;
 	background: none;
 	border: none;
     color: #e2e2ff;
 	left: 1rem;
 	font-size: 2rem;
+}
+
+#toggle-instructions {
+    left: 5rem;
+    font-size: 1.8rem;
 }
 
 
@@ -176,10 +181,8 @@ select {
     z-index: 3;
 
     left: 1rem;
+    bottom: 7rem;
     position: absolute;
-
-    transform: translateY(35%);
-
 }
 
 
@@ -203,4 +206,40 @@ select {
 	display: flex;
     justify-content: space-between;
     padding-bottom: 0.5rem;
+}
+
+
+/* instruction */
+
+#instructions {
+    width: 500px;
+    background: rgba(5, 33, 62, 0.43);
+    display: none; 
+    flex-direction: column;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    z-index: 3;
+    right: 1rem;
+    position: absolute;
+    transform: translateY(13%);
+}
+
+.instructions-line {
+    padding: 0.2rem 0;
+}
+
+.keyboard-key {
+    width: 1.2rem;
+    height: 1.2rem;
+    display: inline-block;
+    border: 1px solid #d2d2f9;
+    border-radius: 0.2rem;
+    margin: 0 0.3rem;
+    text-align: center;
+}
+
+.close {
+    text-align: right;
+    font-size: 1.2rem;
+}
 }

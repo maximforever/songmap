@@ -136,3 +136,15 @@ a:hover {
     height: 100vh;
     
 }
+
+/* instruction */
+
+.keyboard-key {
+	width: 1.2rem;
+    height: 1.2rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: 1px solid #d2d2f9;
+    border-radius: 0.2rem;
+}

@@ -766,6 +766,11 @@ function toggleExploreControls(){
 	exploreAroundSong = false;
 }
 
+function toggleInstructions() {
+	let panelIsDisplayed = document.getElementById("instructions").style.display;
+	document.getElementById("instructions").style.display = (panelIsDisplayed == "flex") ? "none" : "flex";
+}
+
 function toggleExploringAroundSong() {
  
 	exploreAroundSong = document.getElementById("like-this-song").checked;
@@ -811,9 +816,11 @@ function updateAxes(){
 document.querySelector("canvas").addEventListener( 'mousemove', onMouseMove, false );
 document.querySelector("canvas").addEventListener( 'click', onClick, false );
 document.getElementById("toggle-explore-controls").addEventListener( 'click', toggleExploreControls, false );
+document.getElementById("controls-close").addEventListener( 'click', toggleExploreControls, false );
+document.getElementById("toggle-instructions").addEventListener( 'click', toggleInstructions, false );
+document.getElementById("instructions-close").addEventListener( 'click', toggleInstructions, false );
 document.getElementById("like-this-song").addEventListener( 'click', toggleExploringAroundSong, false );
 document.getElementById("manual-control").addEventListener( 'click', toggleExploringWithManualControl, false );
-document.getElementById("like-this-artist").addEventListener( 'click', toggleExploreControls, false );
 
 document.getElementById("x-axis-selector").addEventListener('change', updateAxes, false);
 document.getElementById("y-axis-selector").addEventListener('change', updateAxes, false);

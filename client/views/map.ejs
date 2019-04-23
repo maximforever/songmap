@@ -54,12 +54,7 @@
         </div>
 
         <div id="explore-controls">
-            <!--             
-            <div id="search-controls">
-                <input id="song" placeholder="some-song"/>
-                <button id="search-songs">Search songs</button>
-            </div> -->
-
+            <div class="close"><a id="controls-close"><i class="fas fa-times"></i></a></div>
             <div class = "explore-controls-section" id="axis-controls">
                 
                 <div class="dropdown-wrapper">
@@ -126,6 +121,38 @@
             <div id="map-wrapper">
             </div>
 
+            <div id="instructions">
+                <div class="close"><a id="instructions-close"><i class="fas fa-times"></i></a></div>
+                <div class="instructions-line">
+                    Make sure your Spotify desktop client is on, you have a Premium subscription, and you've recently played a song. 
+                </div>
+                <div class="instructions-line">
+                    Hit <i class="far fa-thumbs-up"></i> to start the seed track.
+                </div>
+                <div class="instructions-line">
+                    Visit <a href="/login"> /login </a> if tracks aren't playing
+                </div>
+                <div class="instructions-line">
+                    <span class="keyboard-key">A</span>
+                    <span class="keyboard-key">S</span>
+                    <span class="keyboard-key">D</span>
+                    <span class="keyboard-key">W</span>
+                    to move camera along the X/Y axis
+                </div>
+                <div class="instructions-line">
+                    <span class="keyboard-key">&#8595;</span>
+                    <span class="keyboard-key">&#8593;</span>
+                    to move camera along the Z axis
+                </div>
+                <div class="instructions-line">
+                    <span class="keyboard-key">J</span>
+                    <span class="keyboard-key">K</span>
+                    <span class="keyboard-key">I</span>
+                    <span class="keyboard-key">L</span>
+                    to rotate camera along the X/Y axis
+                </div>
+                <div class="instructions-line">Made with <i class="fas fa-headphones-alt"></i> by <a href="https://www.maximpekarsky.com" target="_blank">Max Pekarsky</a></div>
+            </div>
             <div id="control-panel-wrapper">
 
                 <div id = "play-controls">
@@ -135,6 +162,7 @@
                 </div>
 
                 <button id="toggle-explore-controls"><i class="fas fa-bars"></i></button>
+                <button id="toggle-instructions"><i class="fas fa-question"></i></button>
 
                 <div id = "now-playing">
                     <div id="playing-album-photo"></div>
