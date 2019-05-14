@@ -1,4 +1,5 @@
 let express = require('express');
+var cookieParser = require('cookie-parser')
 let request = require('request');
 let router = express.Router();
 const bodyParser = require('body-parser');                          // parse request body
@@ -7,12 +8,8 @@ const querystring = require('querystring');
 
 
 require('dotenv').config()                                          // access .env file
-router.use(bodyParser.json());                                     // display body as JSON
-
-
-
-// TODO: REMOVE THIS!!! STORE THIS DATA IN A COOKIE
-let ACCESS_TOKEN = null;
+router.use(bodyParser.json());                                      // display body as JSON
+router.use(cookieParser());                                         // mmmmm me like cookies
 
 
 /* MIDDLEWARE */
@@ -22,24 +19,24 @@ router.use(function(req, res, next){                                            
     let timeNow = new Date();
     console.log(`==> ${req.method.toUpperCase()} ${req.url} on ${timeNow}`);
     next();
+
+    console.log("cookies:");
+    console.log(req.cookies.tokens);
 });
 
 /* ROUTES */
 
 router.get("/", (req, res) =>{
 
-    if(ACCESS_TOKEN === null){
-        res.redirect("/login");
-    } else {
+    if(req.cookies && req.cookies.tokens && req.cookies.tokens.access_token){
         res.render("map", {session: req.session});
+    } else {
+        res.redirect("/login");
     }
-
-    
     
 });
 
 router.post("/test", (req, res) => {
-
 
     let data = JSON.stringify({
         
@@ -155,8 +152,6 @@ router.post("/get-recs", (req, res) => {
                 let tempo=req.body.tempo;
                 completeUrl += `&target_tempo=${tempo}`;
             }
-
-
 
 
             if(req.body.min_danceability != null){
@@ -356,10 +351,7 @@ router.post("/play-in-app", function(req, res){
 
     console.log(req.body);
 
-    //res.send({status: "success!"});
-
-
-    if(ACCESS_TOKEN != null){
+    if(req.cookies && req.cookies.tokens && req.cookies.tokens.access_token){
 
         let playUrl = 'https://api.spotify.com/v1/me/player/play'
 
@@ -372,7 +364,7 @@ router.post("/play-in-app", function(req, res){
         request.put({
             url: playUrl,
             headers: {
-                'Authorization': "Bearer " + ACCESS_TOKEN
+                'Authorization': "Bearer " + req.cookies.tokens.access_token
             },
             body: data,
             json: true
@@ -388,7 +380,39 @@ router.post("/play-in-app", function(req, res){
             if(err || playResponse.statusCode != 204){
                 console.log("ERROR!");
                 console.log(playResponse.body.error);
+
+/*
+                if(playResponse.statusCode == 401){
+                    // if the access token has expired...
+                    // this is gonna get ugly real fast
+
+
+                    let authOptions = {
+                        url: 'https://accounts.spotify.com/api/token',
+                        form: {
+                            code: refresh_token,
+                            redirect_uri: process.env.REDIRECT_URI,
+                            grant_type: 'authorization_code'
+                        },
+                        headers: {
+                            'Authorization': 'Basic ' + new Buffer.from(process.env.CLIENT_ID + ":" + process.env.CLIENT_SECRET).toString('base64')
+                        },
+                        json: true
+                    };
+
+
+                    request.post(authOptions, function(error, response, body) {
+
+                    }
+
+                } else {
+                    
+                }
+
+*/
+
                 res.send({error: playResponse.body.error})
+ 
             } else {
 
                 console.log("IT WORKED!");
@@ -441,7 +465,17 @@ router.get('/spotify-login-redirect', function(req, res){
           console.log(body);
         });
 
-        ACCESS_TOKEN = access_token;
+
+        let tokenData = {
+            access_token: access_token,
+            refresh_token: refresh_token
+        }
+
+        res.cookie('tokens', tokenData, { 
+            //signed: true,
+            maxAge: new Date(Date.now() + (1000*60*60*24*14)),       // 2 weeks
+            httpOnly: true,
+        });
 
         res.redirect("/#authorized");
 /*

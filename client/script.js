@@ -1,8 +1,3 @@
-console.log("hello world!");
-
-let planeCount = 0;
-let planeDepth = -20;
-
 let token = null;
 let starterTrack = {
 	id: "3skn2lauGk7Dx6bVIt5DVj",
@@ -69,7 +64,8 @@ let axisSelection = {
 	y: "energy"
 }
 
-
+let planeCount = 0;
+let planeDepth = -200;
 
 let WIDTH, HEIGHT;
 
@@ -297,6 +293,10 @@ function getNewRecommendations(track){
 					if(object.star && object.data.id == track.id){
 						currentlyPlayingTrack = currentTrack = object;
 						playedTracks.push(currentTrack);
+
+						object.material.color.set(0xff0000);
+
+						//orbitAroundStar(object);	
 					}
 				});
 
@@ -375,8 +375,6 @@ function drawPlayedTrackPath(){
 
 		removePastPlayedTrackPath();
 
-		
-
 		//let material = new THREE.LineBasicMaterial( { color: 0x404c5e } );
 
 		let lineMaterial = new THREE.LineDashedMaterial( {
@@ -392,7 +390,7 @@ function drawPlayedTrackPath(){
 		let pathGeometry = new THREE.Geometry();
 		let playedPathLine = new THREE.Line(pathGeometry, lineMaterial );
 
-		console.log(playedTracks);
+		//console.log(playedTracks);
 
 		playedTracks.forEach((track) => {
 			pathGeometry.vertices.push(new THREE.Vector3( track.position.x, track.position.y, track.position.z) );
@@ -455,7 +453,10 @@ function playClosestTrack(thisTrack){
 		playedTracks.push(closestTrack);			// add to played tracks
 
 		setNewTrackParameters(closestTrack.data);
+	
+		//orbitAroundStar(closestTrack);
 
+		controls.target = closestTrack.position;
 
 		
 		playInApp(closestTrack.data.uri);
@@ -505,7 +506,7 @@ function getDistanceIn3d(x1, y1, z1, x2, y2, z2){
 /* three.js stuff */
 
 
-let camera;
+let camera, controls;
 
 
 let raycaster = new THREE.Raycaster();				// thing that lets us select stuff in 3d space
@@ -534,16 +535,24 @@ let scene = new THREE.Scene;
 camera = new THREE.PerspectiveCamera( 45, WIDTH / HEIGHT, 0.1, 5000);
 
 let canvas = document.querySelector("canvas");
-//let controls = new THREE.OrbitControls( camera, canvas );
+controls = new THREE.OrbitControls( camera, canvas );
+controls.maxDistance = 5000;
+controls.minDistance = 200;
+controls.zoomSpeed = 0.6;
 
-camera.position.set(480, 640, 260);
-// controls.update();					// must be called after any manual changes to the camera's transform
+
+camera.rotation.set((-160 * Math.PI/180), (-10 * Math.PI/180), (179 * Math.PI/180))
+
+//camera.position.set(5355, 10148, 867);
+//camera.position.set(3137, 6621, -2463)
+
+controls.update();					// must be called after any manual changes to the camera's transform
 
 
 //skybox 
 
 let skyboxGeometry = new THREE.CubeGeometry(10000, 10000, 10000);
-let skyboxMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.FrontSide });
+let skyboxMaterial = new THREE.MeshBasicMaterial({ color: 0x000000, side: THREE.FrontSide });
 let skybox = new THREE.Mesh(skyboxGeometry, skyboxMaterial);
  
 scene.add(skybox);
@@ -556,7 +565,7 @@ topLight.position.set(500, 500, 500);
 scene.add(topLight);
 //scene.add(bottomLight);
 
-let starGeometry = new THREE.SphereGeometry(1, 32, 32 );
+let starGeometry = new THREE.SphereGeometry(5, 32, 32 );
 
 function render() {
 
@@ -618,10 +627,14 @@ function render() {
 
 	}
 
-	displayCameraPosition();
+    
+    requestAnimationFrame(render);
+    updateLightPosition(); 
+    drawPlayedTrackPath();
+    
+    controls.update();
 
     renderer.render(scene, camera);
-    requestAnimationFrame(render);
 }
 
 function displayTrack(track){
@@ -634,18 +647,22 @@ function displayTrack(track){
 
 
 render();
-addCameraControls();
+//addCameraControls();
 
 
 function addStar(track){
 
-	let thisXposition = WIDTH * track.analysis[axisSelection.x]; //*4;
-	let thisYposition = HEIGHT * track.analysis[axisSelection.y]; //*4;
+	let thisXposition = WIDTH * track.analysis[axisSelection.x] * 10;
+	let thisYposition = HEIGHT * track.analysis[axisSelection.y] * 10;
 
 	let starMaterial = new THREE.MeshLambertMaterial({ color: 0x5aaff1 });
 
 	let star = new THREE.Mesh(starGeometry, starMaterial);
-	star.position.set(thisXposition, thisYposition, planeCount * planeDepth);		// negative so it's away from us
+
+	let variation = Math.random() * (planeDepth/3) - planeDepth/3/2;
+
+
+	star.position.set(thisXposition, thisYposition, planeCount * (planeDepth));		// negative so it's away from us
 
 	star.data = track;			// storing track data in the star 
 
@@ -658,7 +675,7 @@ function addStar(track){
 
 
 	scene.add(star);
-	//camera.lookAt(star.position);
+
 }
 
 function updateStarPositions(){
@@ -671,23 +688,6 @@ function updateStarPositions(){
 		}
 	});
 
-}
-
-function displayCameraPosition(){
-	document.getElementById("camera-x").innerText = Math.floor(camera.position.x * 10)/10;
-	document.getElementById("camera-y").innerText = Math.floor(camera.position.y * 10)/10;
-	document.getElementById("camera-z").innerText = Math.floor(camera.position.z * 10)/10;
-
-	//90 * Math.PI / 180
-	document.getElementById("camera-angle-x").innerText = Math.floor(camera.rotation.x * 10)/10;
-	document.getElementById("camera-angle-y").innerText = Math.floor(camera.rotation.y * 10)/10;
-	document.getElementById("camera-angle-z").innerText = Math.floor(camera.rotation.z * 10)/10;
-
-}
-
-function displayMousePosition(x, y){
-	document.getElementById("mouse-x").innerText = x;
-	document.getElementById("mouse-y").innerText = y;
 }
 
 
@@ -704,8 +704,6 @@ function onMouseMove( event ) {
 	mouse.x = Math.floor(mouse.x * 100)/100
 	mouse.y = Math.floor(mouse.y * 100)/100
 
-	displayMousePosition(mouse.x, mouse.y)
-
 }
 
 function onClick( event ){
@@ -721,22 +719,27 @@ function onClick( event ){
 
 		if(intersects[0].object.star){
 
-			intersects[0].object.actions.currentlyPlaying = true;
-			let thisStar = intersects[0].object.data;
+			let thisObject = intersects[0].object; 
+			thisObject.actions.currentlyPlaying = true;
+			let thisStar = thisObject.data;
+
+			controls.target = (thisObject.position.x, thisObject.position.y, thisObject.position.z);
+
+
 
 			//getNewRecommendations(thisStar);
 
-			playedTracks.push(intersects[0].object);
+			playedTracks.push(thisObject);
 
 			setNewTrackParameters(thisStar);
 			playInApp(thisStar.uri);
-			currentlyPlayingTrack = currentTrack = intersects[0].object;
+			currentlyPlayingTrack = currentTrack = thisObject;
 
 			console.log("the new currentTrack is");
 			console.log(currentTrack);
 
 			
-			drawPlayedTrackPath();
+			//drawPlayedTrackPath();
 
 		}
 
@@ -792,6 +795,19 @@ function toggleExploringAroundSong() {
 
 }
 
+function orbitAroundStar(star){
+	// making a copy of the object position so that moving the orbit doesn't change the star position
+
+	let x = star.position.x;
+	let y = star.position.y;
+	let z = star.position.z;
+
+	if(controls){
+		controls.target = (x, y, z);	
+	}
+	
+}
+
 function toggleExploringWithManualControl() {
 
 	exploreWithManualControl = document.getElementById("manual-control").checked;
@@ -807,7 +823,7 @@ function updateAxes(){
 	updateStarPositions();
 
 	removePastPlayedTrackPath();
-	drawPlayedTrackPath();
+	//drawPlayedTrackPath();
 
 }
 
@@ -857,78 +873,26 @@ function addCameraControls(){
 	})
 
 
-
-
 	document.addEventListener("keydown",(e) => {
 
-		updateLightPosition();
-
-		if(e.which == 65){
-			camera.position.x -= 10;
-			displayCameraPosition();
-		}
-
-		if(e.which == 87){
-			camera.position.y += 10;
-			displayCameraPosition();
-		}
-
-
-		if(e.which == 68){
-			camera.position.x += 10;
-			displayCameraPosition();
-		}
-
-		if(e.which == 83){
-			camera.position.y -= 10;
-			displayCameraPosition();
-		}
-
-
-
-		if(e.which == 38){
+		/*if(e.which == 38){			//up
 			e.preventDefault();
-			camera.position.z -= 10;
-			displayCameraPosition();
 		}
 
 
-		if(e.which == 40){
+		if(e.which == 40){			//down
 			e.preventDefault();
-			camera.position.z += 10;
-			displayCameraPosition();
+		}
+
+		if(e.which == 37){			//left
+			e.preventDefault();
 		}
 
 
-		// rotate  
-
-
-
-		if(e.which == 76){
-			camera.rotation.y -= (5 * Math.PI / 180);
-			displayCameraPosition();
+		if(e.which == 39){			//right
+			e.preventDefault();
 		}
-
-
-		if(e.which == 74){
-			camera.rotation.y += (5 * Math.PI / 180);
-			displayCameraPosition();
-		}
-
-
-		if(e.which == 73){
-			camera.rotation.x += (5 * Math.PI / 180);
-			displayCameraPosition();
-		}
-
-
-		if(e.which == 75){
-			camera.rotation.x -= (5 * Math.PI / 180);
-			displayCameraPosition();
-		}
-
-
-
+*/
 
 	});
 
