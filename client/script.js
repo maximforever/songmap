@@ -279,39 +279,37 @@ function getNewRecommendations(track){
 	    	//updateSearchValues(track);
 
 
-	    	let recordedIds = allTracks.map((track) => {
+	    	let recordedTrackIds = allTracks.map((track) => {
 	    		return track.id;
 	    	});
 
-	    	// add current track - the initial, seed track
-	    	if(!recordedIds.includes(track.id)){
-	    		allTracks.push(track);
-	    		addStar(track);
-
-	    		// update playing track card
-	    		scene.children.forEach((object) => {
-					if(object.star && object.data.id == track.id){
-						currentlyPlayingTrack = currentTrack = object;
-						playedTracks.push(currentTrack);
-
-						object.material.color.set(0xff0000);
-
-						//orbitAroundStar(object);	
-					}
-				});
-
-				displayUpdatedSliderValues();
-	    	}
+	    	// update playing track card, star color, orbit around star 
+			displayUpdatedSliderValues();
 
 	    	// only add tracks if they're not in our db yet.
 	    	data.tracks.forEach((track) => {
-	    		if(!recordedIds.includes(track.id)){
+	    		if(!recordedTrackIds.includes(track.id)){
 	    			allTracks.push(track);
 	    			addStar(track);
 	    		} else {
 	    			//console.log(`Looks like ${track.name} is already in the system`);
 	    		}
 	    	});
+
+	    	scene.children.forEach((object) => {
+				if(object.star && object.data.id == track.id){
+
+					currentlyPlayingTrack = currentTrack = object;
+					playedTracks.push(currentTrack);
+
+					object.actions.currentlyPlaying = true;
+
+					orbitAroundStar(object);
+
+					console.log(object.material.color)	
+				}
+			});
+
 
 	    	planeCount++;
 
@@ -454,15 +452,12 @@ function playClosestTrack(thisTrack){
 
 		setNewTrackParameters(closestTrack.data);
 	
-		//orbitAroundStar(closestTrack);
-
-		controls.target = closestTrack.position;
-
+		orbitAroundStar(closestTrack);
 		
 		playInApp(closestTrack.data.uri);
+
 		currentlyPlayingTrack = currentTrack = closestTrack;
 		playedTracks.push(closestTrack);
-
 
 		closestTrack.actions.currentlyPlaying = true;
 
@@ -647,8 +642,6 @@ function displayTrack(track){
 
 
 render();
-//addCameraControls();
-
 
 function addStar(track){
 
@@ -723,9 +716,8 @@ function onClick( event ){
 			thisObject.actions.currentlyPlaying = true;
 			let thisStar = thisObject.data;
 
-			controls.target = (thisObject.position.x, thisObject.position.y, thisObject.position.z);
 
-
+			orbitAroundStar(thisObject);
 
 			//getNewRecommendations(thisStar);
 
@@ -796,16 +788,11 @@ function toggleExploringAroundSong() {
 }
 
 function orbitAroundStar(star){
+
 	// making a copy of the object position so that moving the orbit doesn't change the star position
+	let thisStarPosition = new THREE.Vector3(star.position.x, star.position.y, star.position.z);
+	controls.target = thisStarPosition;
 
-	let x = star.position.x;
-	let y = star.position.y;
-	let z = star.position.z;
-
-	if(controls){
-		controls.target = (x, y, z);	
-	}
-	
 }
 
 function toggleExploringWithManualControl() {
@@ -860,44 +847,6 @@ function updateLightPosition(){
 	topLight.position.set(camera.position.x, camera.position.y, camera.position.z);
 }
 
-
-
-function addCameraControls(){
-
-	document.addEventListener("mousedown", () => {
-		mousePressed = true;
-	})
-
-	document.addEventListener("mouseup", () => {
-		mousePressed = false;
-	})
-
-
-	document.addEventListener("keydown",(e) => {
-
-		/*if(e.which == 38){			//up
-			e.preventDefault();
-		}
-
-
-		if(e.which == 40){			//down
-			e.preventDefault();
-		}
-
-		if(e.which == 37){			//left
-			e.preventDefault();
-		}
-
-
-		if(e.which == 39){			//right
-			e.preventDefault();
-		}
-*/
-
-	});
-
-
-}
 
 function markCurrentTrackAsPlayed(){
 
