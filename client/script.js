@@ -527,7 +527,9 @@ let scene = new THREE.Scene;
 
 // field-of-view (how much we can see around), aspect (screen ratio), near, and far -
 // the closest & furthest things the camera can see 
-camera = new THREE.PerspectiveCamera( 45, WIDTH / HEIGHT, 0.1, 5000);
+camera = new THREE.PerspectiveCamera( 45, WIDTH / HEIGHT, 0.1, 10000);
+
+
 
 let canvas = document.querySelector("canvas");
 controls = new THREE.OrbitControls( camera, canvas );
