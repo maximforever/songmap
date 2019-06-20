@@ -575,6 +575,17 @@ function render() {
 
 //	console.log(intersects.length);
 
+	
+	let values = []; 
+	
+	scene.children.forEach((object) => {
+		if(object.star){
+			values.push(object.data.analysis[axisSelection.x]);
+		}
+	})
+
+	let min = Math.min(...values);
+	let max = Math.max(...values) - Math.min(...values);
 
 	scene.children.forEach((object) => {
 		
@@ -587,7 +598,21 @@ function render() {
 			} else if(object.actions.previouslyPlayed){
 				object.material.color.set(0x94ff7a);
 			} else {
-				object.material.color.set(0x1e9dff);
+				
+
+				let weighedStat = object.data.analysis[axisSelection.x] - min;
+			
+				let calculatedColor = Math.floor(255 * (weighedStat/max));
+
+
+				let color = `rgb(${calculatedColor}, ${calculatedColor}, 202)`;
+
+				object.scale(object.data.analysis[axisSelection.y] - 0.5)
+
+
+				object.material.color.set(color);
+
+				//object.material.color.set(0x1e9dff);
 			}
 
 		}
@@ -654,7 +679,7 @@ function addStar(track){
 
 	let star = new THREE.Mesh(starGeometry, starMaterial);
 
-	let variation = Math.random() * (planeDepth/3) - planeDepth/3/2;
+	let variation = Math.random() * (planeDepth) - planeDepth/3/2;
 
 
 	star.position.set(thisXposition, thisYposition, planeCount * (planeDepth));		// negative so it's away from us
@@ -678,8 +703,8 @@ function updateStarPositions(){
 	scene.children.forEach((object) => {
 		if(object.star){
 			let thisStar = object;
-			thisStar.position.x = WIDTH * thisStar.data.analysis[axisSelection.x];
-			thisStar.position.y = WIDTH * thisStar.data.analysis[axisSelection.y];
+			thisStar.position.x = WIDTH * thisStar.data.analysis[axisSelection.x] * 10;;
+			thisStar.position.y = WIDTH * thisStar.data.analysis[axisSelection.y] * 10;
 		}
 	});
 
@@ -809,7 +834,21 @@ function updateAxes(){
 	axisSelection.x = document.getElementById("x-axis-selector").value;
 	axisSelection.y = document.getElementById("y-axis-selector").value;
 
+
+
+
+
+
 	updateStarPositions();
+
+	scene.children.forEach((object) => {
+
+
+		if(typeof(object.star) != "undefined" && object.data.id == currentlyPlayingTrack.data.id){
+			console.log("got it");
+			orbitAroundStar(object);
+		}
+	});
 
 	removePastPlayedTrackPath();
 	//drawPlayedTrackPath();

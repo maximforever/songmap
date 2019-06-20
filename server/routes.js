@@ -426,6 +426,53 @@ router.post("/play-in-app", function(req, res){
 });
 
 
+function getAuthorizationToken(req, callback){
+
+    let code = req.query.code || null;
+    let state = req.query.state || null;
+
+
+    let authOptions = {
+        url: 'https://accounts.spotify.com/api/token',
+        form: {
+            code: code,
+            redirect_uri: process.env.REDIRECT_URI,
+            grant_type: 'authorization_code'
+        },
+        headers: {
+            'Authorization': 'Basic ' + new Buffer.from(process.env.CLIENT_ID + ":" + process.env.CLIENT_SECRET).toString('base64')
+        },
+        json: true
+    };
+
+
+    request.post(authOptions, function(error, response, body) {
+      if (!error && response.statusCode === 200) {
+
+        let access_token = body.access_token;
+        let refresh_token = body.refresh_token;
+
+        let options = {
+          url: 'https://api.spotify.com/v1/me',
+          headers: { 'Authorization': 'Bearer ' + access_token },
+          json: true
+        };
+
+        callback({
+            success: true,
+            options: options
+        })
+
+      } else {
+        callback({
+            success: false,
+            options: null
+        })
+      }
+    });
+}
+
+
 /* Authorization Code Flow */
 
 router.get('/spotify-login-redirect', function(req, res){
@@ -433,6 +480,16 @@ router.get('/spotify-login-redirect', function(req, res){
     let code = req.query.code || null;
     let state = req.query.state || null;
 
+
+/*
+    getAuthorizationToken(req, function processToken(response){
+
+        if(!response.success){
+            
+        }
+
+    })
+*/
 
     let authOptions = {
         url: 'https://accounts.spotify.com/api/token',
@@ -478,15 +535,7 @@ router.get('/spotify-login-redirect', function(req, res){
         });
 
         res.redirect("/#authorized");
-/*
-        // we can also pass the token to the browser to make requests from there
-        res.redirect('/#' +
-          querystring.stringify({
-            access_token: access_token,
-            refresh_token: refresh_token
-          }));
 
-        */
       } else {
         res.redirect('/#' +
           querystring.stringify({
@@ -495,9 +544,6 @@ router.get('/spotify-login-redirect', function(req, res){
       }
     });
 
-
-    //console.log("got a ping to redirect uri");
-    //res.redirect("/")
 });
 
 
