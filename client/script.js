@@ -607,7 +607,7 @@ function render() {
 
 				let color = `rgb(${calculatedColor}, ${calculatedColor}, 202)`;
 
-				object.scale(object.data.analysis[axisSelection.y] - 0.5)
+				//object.scale(object.data.analysis[axisSelection.y] - 0.5)
 
 
 				object.material.color.set(color);
