@@ -44,18 +44,25 @@ let starterTrack = {
 		    }
 		]  
 	},
-    "artists": [
-    {
-      "external_urls": {
-        "spotify": "https://open.spotify.com/artist/12Chz98pHFMPJEknJQMWvI"
-      },
-      "href": "https://api.spotify.com/v1/artists/12Chz98pHFMPJEknJQMWvI",
-      "id": "12Chz98pHFMPJEknJQMWvI",
-      "name": "Muse",
-      "type": "artist",
-      "uri": "spotify:artist:12Chz98pHFMPJEknJQMWvI"
-    }
-  ],
+	"artists": [
+	    {
+	      "external_urls": {
+	        "spotify": "https://open.spotify.com/artist/12Chz98pHFMPJEknJQMWvI"
+	      },
+	      "href": "https://api.spotify.com/v1/artists/12Chz98pHFMPJEknJQMWvI",
+	      "id": "12Chz98pHFMPJEknJQMWvI",
+	      "name": "Muse",
+	      "type": "artist",
+	      "uri": "spotify:artist:12Chz98pHFMPJEknJQMWvI"
+	    }
+  	],
+  	"position": {
+  		x: 0,
+  		y: 0,
+  		z: 0
+  	}
+
+
 }
 
 
@@ -409,11 +416,7 @@ function removePastPlayedTrackPath(){
 
 
 function playClosestTrack(thisTrack){
-
-
-
 	console.log(thisTrack);
-
 
 	if(scene.children.length < 4){
 		console.log("nothing to play!");
@@ -433,7 +436,6 @@ function playClosestTrack(thisTrack){
 		// cycle through the children, but only the stars
 		scene.children.forEach((object) => {
 			if(object.star){
-
 				let distance = getDistanceIn3d(object.position.x, object.position.y, object.position.z,  thisTrack.position.x, thisTrack.position.y, thisTrack.position.z);
 
 				if(object.data.id != thisTrack.data.id && distance < currentMinDistance && !playedTrackIds.includes(object.data.id)){
