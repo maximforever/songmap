@@ -68,7 +68,7 @@ let WIDTH, HEIGHT;
 
 
 // TODO: implement this!
-let searchAroundCurrentTrack = false; // adjust search criteria around this track			
+let searchAroundCurrentTrack = false; // adjust search criteria around this track     
 
 let playedTracks = [];
 
@@ -142,10 +142,10 @@ let displayRecommendations = () => {
 
   document.getElementById("all-tracks").innerHTML = (
     `
-		<h2>Recommendations for ${currentTrack.name}</h2>
-		<h4>Total: ${allTracks.length}</h4>
-		<div id="recommendations"></div>
-		`
+    <h2>Recommendations for ${currentTrack.name}</h2>
+    <h4>Total: ${allTracks.length}</h4>
+    <div id="recommendations"></div>
+    `
   )
 
 
@@ -173,29 +173,29 @@ let displayRecommendations = () => {
 
 function getTrackCard(track) {
   return `<div class = "one-track">
-    			<div class="track-main-info">
-    				<img src="${track.album.images[2].url}" />
-    				<div class="track-text-info">
-    					<p class="track-header" >${track.name} by <strong>${track.artists[0].name}</strong></p>  
-    					<p>${track.album.name} (${track.album.release_date})</p>    	
-    				</div>		
-				</div>
-				<div class = "track-preview">
-					<a href = "${track.external_urls.spotify}" target="_blank">Open in Spotify</a>
-					<button class="play-in-app" data-uri="${track.uri}">Play in Spotify</button>
-				</div>
-				<div class = "genres">${track.genres}</div>
-				<div class = "track-stats">
-					<p>SPCH ${track.analysis.speechiness}</p>
-					<p>ACOUST ${track.analysis.acousticness}</p>
-					<p>INST ${track.analysis.instrumentalness}</p>
-					<p>LIVE ${track.analysis.liveness}</p>
-					<p>VAL ${track.analysis.valence}</p>
-					<p>TMP ${track.analysis.tempo}</p>
-					<p>ENG ${track.analysis.energy}</p>
-				</div>
-				<button class="get-more" id="${track.id.trim()}" data-name="${track.name}"> MOAR LIKE DIS</button>
-    		</div>`
+          <div class="track-main-info">
+            <img src="${track.album.images[2].url}" />
+            <div class="track-text-info">
+              <p class="track-header" >${track.name} by <strong>${track.artists[0].name}</strong></p>  
+              <p>${track.album.name} (${track.album.release_date})</p>      
+            </div>    
+        </div>
+        <div class = "track-preview">
+          <a href = "${track.external_urls.spotify}" target="_blank">Open in Spotify</a>
+          <button class="play-in-app" data-uri="${track.uri}">Play in Spotify</button>
+        </div>
+        <div class = "genres">${track.genres}</div>
+        <div class = "track-stats">
+          <p>SPCH ${track.analysis.speechiness}</p>
+          <p>ACOUST ${track.analysis.acousticness}</p>
+          <p>INST ${track.analysis.instrumentalness}</p>
+          <p>LIVE ${track.analysis.liveness}</p>
+          <p>VAL ${track.analysis.valence}</p>
+          <p>TMP ${track.analysis.tempo}</p>
+          <p>ENG ${track.analysis.energy}</p>
+        </div>
+        <button class="get-more" id="${track.id.trim()}" data-name="${track.name}"> MOAR LIKE DIS</button>
+        </div>`
 }
 
 function getNewRecommendations(track) {
@@ -288,12 +288,10 @@ function getNewRecommendations(track) {
 
       scene.children.forEach((object) => {
         if (object.star && object.data.id == track.id) {
-
           currentlyPlayingTrack = currentTrack = object;
           playedTracks.push(currentTrack);
 
           object.actions.currentlyPlaying = true;
-
           orbitAroundStar(object);
 
           console.log(object.material.color)
@@ -304,15 +302,12 @@ function getNewRecommendations(track) {
     });
 }
 
-
 let searchSongs = (term) => {
-
   term = term.trim().replace(new RegExp(/\s+/, "g"), "%20");
   let url = `https://api.spotify.com/v1/search/?q=${term}`;
-
+  
   console.log(url);
-
-
+  
   fetch(url, {
       headers: {
         'Authorization': `Bearer ${token}`
@@ -332,10 +327,7 @@ let searchSongs = (term) => {
 
 
 function calculateGenres() {
-
-
   let genreMap = {};
-
 
   allTracks.forEach((track) => {
 
@@ -560,7 +552,7 @@ function render() {
   // calculate objects intersecting the picking ray
   let intersects = raycaster.intersectObjects(scene.children);
 
-  //	console.log(intersects.length);
+  //  console.log(intersects.length);
   let values = [];
 
   scene.children.forEach((object) => {
@@ -584,9 +576,9 @@ function render() {
         object.material.color.set(0x94ff7a);
       } else {
 
-      	object.material.color.set(0x26e3fc);
+        object.material.color.set(0x26e3fc);
 
-      	//TO DO: figure out why this doesn't work, and that the hell min and max are
+        //TO DO: figure out why this doesn't work, and that the hell min and max are
 
         // let weighedStat = object.data.analysis[axisSelection.x] - min;
         // let calculatedColor = Math.floor(255 * (weighedStat / max));
@@ -652,21 +644,15 @@ function displayTrack(track) {
 render();
 
 function addStar(track) {
-
   let thisXposition = WIDTH * track.analysis[axisSelection.x] * 10;
   let thisYposition = HEIGHT * track.analysis[axisSelection.y] * 10;
 
   let starMaterial = new THREE.MeshLambertMaterial({ color: 0x5aaff1 });
-
   let star = new THREE.Mesh(starGeometry, starMaterial);
-
   let variation = Math.random() * (planeDepth) - planeDepth / 3 / 2;
 
-
   star.position.set(thisXposition, thisYposition, planeCount * (planeDepth)); // negative so it's away from us
-
   star.data = track; // storing track data in the star 
-
   star.star = true; // how we know this is a star
 
   star.actions = {
@@ -674,13 +660,11 @@ function addStar(track) {
     hover: false
   }
 
-
   scene.add(star);
 
 }
 
 function updateStarPositions() {
-
   scene.children.forEach((object) => {
     if (object.star) {
       let thisStar = object;
@@ -688,12 +672,9 @@ function updateStarPositions() {
       thisStar.position.y = WIDTH * thisStar.data.analysis[axisSelection.y] * 10;
     }
   });
-
 }
 
-
 function onMouseMove(event) {
-
   // calculate mouse position in normalized device coordinates
   // (-1 to +1) for both components
 
@@ -815,16 +796,9 @@ function updateAxes() {
   axisSelection.x = document.getElementById("x-axis-selector").value;
   axisSelection.y = document.getElementById("y-axis-selector").value;
 
-
-
-
-
-
   updateStarPositions();
 
   scene.children.forEach((object) => {
-
-
     if (typeof(object.star) != "undefined" && object.data.id == currentlyPlayingTrack.data.id) {
       console.log("got it");
       orbitAroundStar(object);
@@ -833,10 +807,7 @@ function updateAxes() {
 
   removePastPlayedTrackPath();
   //drawPlayedTrackPath();
-
 }
-
-
 
 document.querySelector("canvas").addEventListener('mousemove', onMouseMove, false);
 document.querySelector("canvas").addEventListener('click', onClick, false);
@@ -929,10 +900,10 @@ function playInApp(uri) {
     .then(function(myJson) {
 
       if (myJson.error) {
-        console.log("ERROR");
-        console.log(myJson.error.message);
-      } else {
-        console.log(myJson);
+        if (myJson.error.message == "The access token expired") {
+          window.location.pathname = "/login"
+        }
+        console.log(`ERROR: ${myJson.error.message}`);
       }
     });
 

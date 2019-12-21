@@ -1,180 +1,149 @@
 <!DOCTYPE html>
-
 <HTML>
-    <HEAD> 
-        <TITLE>Song Map</TITLE>
-        <meta charset="utf-8">
 
-        <!--  Google Fonts -->
+<HEAD>
+  <TITLE>Song Map</TITLE>
+  <meta charset="utf-8">
+  <!--  Google Fonts -->
+  <!-- fonts -->
+  <link href="https://fonts.googleapis.com/css?family=Montserrat:300,400,600" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css?family=Cutive+Mono" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css?family=Exo:300,500" rel="stylesheet">
+  <!-- Browser icon -->
+  <link rel="icon" href="./assets/images/icon.png" />
+  <!-- Font awesome -->
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.3.1/css/all.css" integrity="sha384-mzrmE5qonljUremFsqc01SB46JvROS7bZs3IO2EmfFsd15uHvIt+Y8vEf7N7fWAU" crossorigin="anonymous">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <!-- CSS -->
+  <link rel="stylesheet" type="text/css" href="./map-stylesheet.css">
+  </style>
+</HEAD>
 
-        <!-- fonts -->
-        <link href="https://fonts.googleapis.com/css?family=Montserrat:300,400,600" rel="stylesheet">
-        <link href="https://fonts.googleapis.com/css?family=Cutive+Mono" rel="stylesheet">
-        <link href="https://fonts.googleapis.com/css?family=Exo:300,500" rel="stylesheet">
-
-        <!-- Browser icon -->
-        <link rel="icon" href="./assets/images/icon.png" />
-
-        <!-- Font awesome -->
-        <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.3.1/css/all.css" integrity="sha384-mzrmE5qonljUremFsqc01SB46JvROS7bZs3IO2EmfFsd15uHvIt+Y8vEf7N7fWAU" crossorigin="anonymous">
-        <meta name="viewport" content="width=device-width,initial-scale=1.0">
-        
-        <!-- CSS -->
-        <link rel="stylesheet" type="text/css" href="./map-stylesheet.css"></style>
-
-    </HEAD>
-
-
-    <BODY>
-
-        <div id ="debug-panel">
-            <div id = "camera-position">
-                {
-                <span id="camera-x">-</span>, 
-                <span id="camera-y">-</span>, 
-                <span id="camera-z">-</span>
-                }
-            </div>
-
-            <div id = "camera-rotation">
-                {
-                <span id="camera-angle-x">-</span>, 
-                <span id="camera-angle-y">-</span>, 
-                <span id="camera-angle-z">-</span>
-                }
-            </div>
-
-            <div id = "mouse-position">
-                {
-                <span id="mouse-x">-</span>, 
-                <span id="mouse-y">-</span>
-                }
-            </div>
-
+<BODY>
+  <div id="debug-panel">
+    <div id="camera-position">
+      {
+      <span id="camera-x">-</span>,
+      <span id="camera-y">-</span>,
+      <span id="camera-z">-</span>
+      }
+    </div>
+    <div id="camera-rotation">
+      {
+      <span id="camera-angle-x">-</span>,
+      <span id="camera-angle-y">-</span>,
+      <span id="camera-angle-z">-</span>
+      }
+    </div>
+    <div id="mouse-position">
+      {
+      <span id="mouse-x">-</span>,
+      <span id="mouse-y">-</span>
+      }
+    </div>
+  </div>
+  <div id="explore-controls">
+    <div class="close"><a id="controls-close"><i class="fas fa-times"></i></a></div>
+    <div class="explore-controls-section" id="axis-controls">
+      <div class="dropdown-wrapper">
+        x-axis:
+        <select id="x-axis-selector">
+          <option value="energy">Energy</option>
+          <option value="valence" selected>Valence</option>
+          <option value="danceability">Danceability</option>
+          <option value="instrumentalness">Instrumentalness</option>
+        </select>
+      </div>
+      <div class="dropdown-wrapper">
+        y-axis:
+        <select id="y-axis-selector">
+          <option value="energy" selected>Energy</option>
+          <option value="valence">Valence</option>
+          <option value="danceability">Danceability</option>
+          <option value="instrumentalness">Instrumentalness</option>
+        </select>
+      </div>
+    </div>
+    <div class="explore-controls-section" id="search-controls">
+      <div class="one-slider">
+        <div class="slider-label">
+          Energy <span id="energy-value">0.0</span>
         </div>
-
-        <div id="explore-controls">
-            <div class="close"><a id="controls-close"><i class="fas fa-times"></i></a></div>
-            <div class = "explore-controls-section" id="axis-controls">
-                
-                <div class="dropdown-wrapper">
-                    x-axis: 
-                        <select id="x-axis-selector">
-                          <option value="energy">Energy</option>
-                          <option value="valence" selected>Valence</option>
-                          <option value="danceability">Danceability</option>
-                          <option value="instrumentalness">Instrumentalness</option>
-                        </select>
-                </div>
-
-                <div class="dropdown-wrapper">
-                    y-axis: 
-                    <select id="y-axis-selector">
-                      <option value="energy" selected>Energy</option>
-                      <option value="valence">Valence</option>
-                      <option value="danceability">Danceability</option>
-                      <option value="instrumentalness">Instrumentalness</option>
-                    </select>
-                </div>
-            </div>
-
-            <div class = "explore-controls-section"  id="search-controls">
-                <div class="one-slider">
-                    <div class="slider-label">
-                        Energy <span id="energy-value">0.0</span>
-                    </div>
-                    <input type="range" min="0" max="1" value="0.5" class="slider" step="0.1" id="energy">
-                </div>
-
-                <div class="one-slider">
-                    <div class="slider-label">
-                        Danceability <span id="danceability-value">0.0</span>
-                    </div>
-                    <input type="range" min="0" max="1" value="0.5" class="slider" step="0.1" id="danceability">
-                </div>
-
-                <div class="one-slider">
-                    <div class="slider-label">
-                        Valence <span id="valence-value">0.0</span>
-                    </div>
-                    <input type="range" min="0" max="1" value="0.5" class="slider" step="0.1" id="valence">
-                </div>
-
-                <div class="one-slider">
-                    <div class="slider-label">
-                        Tempo <span id="tempo-value">120</span>
-                    </div>
-                    <input type="range" min="60" max="180" value="120" class="slider" step="10" id="tempo">
-                </div>
-            </div>
-
-            <div class = "explore-controls-section"  id="like-controls">
-                
-                <input type="checkbox" id="manual-control" name="like-select" value="manual"> Manual control<br>
-                <input type="checkbox" id="like-this-song" name="like-select" value="song"> I like this song<br>
-                <input type="checkbox" id="like-this-artist"name="like-select" value="artist"> I like this artist<br>
-                <a href='#'>Display all by this artist</a>
-            </div>
+        <input type="range" min="0" max="1" value="0.5" class="slider" step="0.1" id="energy">
+      </div>
+      <div class="one-slider">
+        <div class="slider-label">
+          Danceability <span id="danceability-value">0.0</span>
         </div>
-
-        <div id="page-wrapper">
-            <div id="map-wrapper">
-            </div>
-
-            <div id="instructions">
-                <div class="close"><a id="instructions-close"><i class="fas fa-times"></i></a></div>
-                <div class="instructions-line">
-                    Make sure your Spotify desktop client is on, you have a Premium subscription, and you've recently played a song
-                </div>
-                <div class="instructions-line">
-                    Hit <i class="far fa-thumbs-up"></i> to play the seed track or get recommendations for the current track.
-                </div>
-                <div class="instructions-line">
-                    Visit <a href="/login"> /login </a> if tracks aren't playing
-                </div>
-                <div class="instructions-line">
-                    Click and drag to orbit around the current track. Use the mouse wheel or your trackpad to zoom in and out
-                </div>
-                <div class="instructions-line">
-                    <span class="keyboard-key">&#8593;</span>
-                    <span class="keyboard-key">&#8594;</span>
-                    <span class="keyboard-key">&#8595;</span>
-                    <span class="keyboard-key">&#8592;</span>
-                    to move camera
-                </div>
-                <div class="instructions-line">Made with <i class="fas fa-headphones-alt"></i> by <a href="https://www.maximpekarsky.com" target="_blank">Max Pekarsky</a></div>
-            </div>
-            <div id="control-panel-wrapper">
-
-                <div id = "play-controls">
-                    
-                    <button id="play-next-track"><i class="fas fa-forward"></i></button>
-                    <button id="get-recommendations-for-current-track"><i class="far fa-thumbs-up"></i></button>
-                </div>
-
-                <button id="toggle-explore-controls"><i class="fas fa-bars"></i></button>
-                <button id="toggle-instructions"><i class="fas fa-question"></i></button>
-
-                <div id = "now-playing">
-                    <div id="playing-album-photo"></div>
-                    <div id="playing-metadata">
-                        <div id="playing-name"></div>
-                        <div id="playing-album"></div>
-                        <div id="playing-artist"></div>
-                    </div>
-                </div>
-            </div>
-
-
-
+        <input type="range" min="0" max="1" value="0.5" class="slider" step="0.1" id="danceability">
+      </div>
+      <div class="one-slider">
+        <div class="slider-label">
+          Valence <span id="valence-value">0.0</span>
         </div>
+        <input type="range" min="0" max="1" value="0.5" class="slider" step="0.1" id="valence">
+      </div>
+      <div class="one-slider">
+        <div class="slider-label">
+          Tempo <span id="tempo-value">120</span>
+        </div>
+        <input type="range" min="60" max="180" value="120" class="slider" step="10" id="tempo">
+      </div>
+    </div>
+    <div class="explore-controls-section" id="like-controls">
+      <input type="checkbox" id="manual-control" name="like-select" value="manual"> Manual control<br>
+      <input type="checkbox" id="like-this-song" name="like-select" value="song"> I like this song<br>
+      <input type="checkbox" id="like-this-artist" name="like-select" value="artist"> I like this artist<br>
+      <a href='#'>Display all by this artist</a>
+    </div>
+  </div>
+  <div id="page-wrapper">
+    <div id="map-wrapper">
+    </div>
+    <div id="instructions">
+      <div class="close"><a id="instructions-close"><i class="fas fa-times"></i></a></div>
+      <div class="instructions-line">
+        Make sure your Spotify desktop client is on, you have a Premium subscription, and you've recently played a song
+      </div>
+      <div class="instructions-line">
+        Hit <i class="far fa-thumbs-up"></i> to play the seed track or get recommendations for the current track.
+      </div>
+      <div class="instructions-line">
+        Visit <a href="/login"> /login </a> if tracks aren't playing
+      </div>
+      <div class="instructions-line">
+        Click and drag to orbit around the current track. Use the mouse wheel or your trackpad to zoom in and out
+      </div>
+      <div class="instructions-line">
+        <span class="keyboard-key">&#8593;</span>
+        <span class="keyboard-key">&#8594;</span>
+        <span class="keyboard-key">&#8595;</span>
+        <span class="keyboard-key">&#8592;</span>
+        to move camera
+      </div>
+      <div class="instructions-line">Made with <i class="fas fa-headphones-alt"></i> by <a href="https://www.maximpekarsky.com" target="_blank">Max Pekarsky</a></div>
+    </div>
+    <div id="control-panel-wrapper">
+      <div id="play-controls">
+        <button id="play-next-track"><i class="fas fa-forward"></i></button>
+        <button id="get-recommendations-for-current-track"><i class="far fa-thumbs-up"></i></button>
+      </div>
+      <button id="toggle-explore-controls"><i class="fas fa-bars"></i></button>
+      <button id="toggle-instructions"><i class="fas fa-question"></i></button>
+      <div id="now-playing">
+        <div id="playing-album-photo"></div>
+        <div id="playing-metadata">
+          <div id="playing-name"></div>
+          <div id="playing-album"></div>
+          <div id="playing-artist"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="./assets/three.js"></script>
+  <script src="./assets/OrbitControls.js"></script>
+  <script src="https://d3js.org/d3.v4.min.js"></script>
+  <script src="./script.js"></script>
+</BODY>
 
-
-
-
-        <script src="./assets/three.js"></script>
-        <script src="./assets/OrbitControls.js"></script>
-        <script src="https://d3js.org/d3.v4.min.js"></script>
-        <script src="./script.js"></script>
-    </BODY>
 </HTML>
