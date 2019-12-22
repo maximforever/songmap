@@ -303,27 +303,44 @@ function getNewRecommendations(track) {
 }
 
 let searchSongs = (term) => {
-  term = term.trim().replace(new RegExp(/\s+/, "g"), "%20");
-  let url = `https://api.spotify.com/v1/search/?q=${term}`;
-  
-  console.log(url);
-  
+  term = term.trim().replace(new RegExp(/\s+/, "g"), "%20");    // replace space with %20
+  let data = {
+    term: term
+  };
+
+  let url = `/search-songs`;
+
   fetch(url, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      },
       json: true,
-      method: "GET"
+      method: "POST",
+      body: JSON.stringify(data),
+      headers: {
+        'Content-Type': 'application/json' // this is important! express won't read our data as json without it
+      }
     })
     .then(function(response) {
       return response.json();
     })
     .then(function(myJson) {
-      console.log(myJson);
+      if (myJson.error) {
+        console.log(`ERROR: ${myJson.error.message}`);
+      }
 
+      console.log(myJson.tracks);
+
+      fillTrackResults(myJson.tracks)
     });
 }
 
+
+function fillTrackResults(tracks){
+  wrapper =  document.getElementById("search-results");
+  wrapper.innerHTML = "";
+
+  tracks.forEach((track) => {
+    wrapper.innerHTML += `<div class='one-result'>${track.name} by ${track.artists[0].name}</div>`;
+  })
+}
 
 
 function calculateGenres() {
@@ -743,6 +760,12 @@ function onResize() {
 
 }
 
+function searchForTrack(){
+  let searchQuery = document.getElementById("track-search-field").value
+  return searchSongs(searchQuery);
+}
+
+
 function toggleExploreControls() {
 
   let panelIsDisplayed = document.getElementById("explore-controls").style.display;
@@ -817,6 +840,8 @@ document.getElementById("toggle-instructions").addEventListener('click', toggleI
 document.getElementById("instructions-close").addEventListener('click', toggleInstructions, false);
 document.getElementById("like-this-song").addEventListener('click', toggleExploringAroundSong, false);
 document.getElementById("manual-control").addEventListener('click', toggleExploringWithManualControl, false);
+document.getElementById("track-search-field").addEventListener('keyup', searchForTrack, false)
+
 
 document.getElementById("x-axis-selector").addEventListener('change', updateAxes, false);
 document.getElementById("y-axis-selector").addEventListener('change', updateAxes, false);
